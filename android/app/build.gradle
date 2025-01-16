@@ -1,0 +1,87 @@
+plugins {
+    id("com.android.application")
+    id("kotlin-android")
+    id("dev.flutter.flutter-gradle-plugin")
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace = "ke.co.justhomes.app"
+    compileSdk = flutter.compileSdkVersion
+    //compileSdk= 34
+    ndkVersion = "25.1.8937393"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    packagingOptions {
+        // Fixes duplicate libraries build issue, especially when your project uses more than one plugin that depend on C++ libs.
+        pickFirst 'lib/**/libc++_shared.so'
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    defaultConfig {
+        applicationId "ke.co.justhomes.app"
+        minSdk = 24
+        targetSdk = flutter.targetSdkVersion // Uses Flutter's specified target SDK version
+       // targetSdk=33
+        versionCode = flutter.versionCode // Version code from Flutter
+        versionName = flutter.versionName // Version name from Flutter
+    }
+
+    signingConfigs {
+        release {
+            // Signing configuration to use your keystore
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+        debug {
+            // Signing configuration to use your keystore
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug // Apply the signing config for debug build
+            minifyEnabled true // Disable code shrinking and obfuscation for debug builds
+            shrinkResources false // Disable resource shrinking for debug builds
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro' // ProGuard settings
+        }
+        release {
+            signingConfig signingConfigs.release // Apply the signing config for release build
+            minifyEnabled true // Enable code shrinking and obfuscation for release builds
+            shrinkResources true // Remove unused resources in the release build
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro' // ProGuard settings
+        }
+    }
+}
+
+flutter {
+    source = "../.." // Defines the path to your Flutter project
+}
+
+// Dependencies for Google Sign-In or Firebase if necessary
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:32.0.0') // Adjust version as necessary
+    implementation 'com.google.firebase:firebase-auth' // Include Firebase Auth if you are using it
+    implementation 'com.google.android.gms:play-services-auth:20.6.0'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.7.10'
+}
+
+apply plugin: 'com.google.gms.google-services'
