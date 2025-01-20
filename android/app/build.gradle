@@ -39,22 +39,22 @@ android {
         versionName = flutter.versionName // Version name from Flutter
     }
 
-    signingConfigs {
-        release {
-            // Signing configuration to use your keystore
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
-        }
-        debug {
-            // Signing configuration to use your keystore
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
-        }
-    }
+//    signingConfigs {
+//        release {
+//            // Signing configuration to use your keystore
+//            keyAlias keystoreProperties['keyAlias']
+//            keyPassword keystoreProperties['keyPassword']
+//            storeFile file(keystoreProperties['storeFile'])
+//            storePassword keystoreProperties['storePassword']
+//        }
+//        debug {
+//            // Signing configuration to use your keystore
+//            keyAlias keystoreProperties['keyAlias']
+//            keyPassword keystoreProperties['keyPassword']
+//            storeFile file(keystoreProperties['storeFile'])
+//            storePassword keystoreProperties['storePassword']
+//        }
+//    }
 
     buildTypes {
         debug {
@@ -63,12 +63,12 @@ android {
             shrinkResources false // Disable resource shrinking for debug builds
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro' // ProGuard settings
         }
-        release {
-            signingConfig signingConfigs.release // Apply the signing config for release build
-            minifyEnabled true // Enable code shrinking and obfuscation for release builds
-            shrinkResources true // Remove unused resources in the release build
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro' // ProGuard settings
-        }
+//        release {
+//            signingConfig signingConfigs.release // Apply the signing config for release build
+//            minifyEnabled true // Enable code shrinking and obfuscation for release builds
+//            shrinkResources true // Remove unused resources in the release build
+//            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro' // ProGuard settings
+//        }
     }
 }
 

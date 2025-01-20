@@ -435,6 +435,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.1"
+  flutter_form_builder:
+    dependency: "direct main"
+    description:
+      name: flutter_form_builder
+      sha256: "560eb5e367d81170c6ade1e7ae63ecc5167936ae2cdfaae8a345e91bce19d2f2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.2.1"
   flutter_launcher_icons:
     dependency: "direct main"
     description:
@@ -1430,13 +1438,13 @@ packages:
     source: hosted
     version: "2.9.2"
   video_player_android:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: video_player_android
-      sha256: e343701aa890b74a863fa460f5c0e628127ed06a975d7d9af6b697133fb25bdf
+      sha256: b5f318087fb009a1425eee29079eb99fbcbd9e2dc480aaa36dc5b6f40f5f8ae1
       url: "https://pub.dev"
     source: hosted
-    version: "2.7.1"
+    version: "2.7.7"
   video_player_avfoundation:
     dependency: transitive
     description:

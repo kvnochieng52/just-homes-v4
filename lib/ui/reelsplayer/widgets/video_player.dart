@@ -65,6 +65,29 @@ class _VideoplayerState extends State<Videoplayer> {
 
   @override
   Widget build(BuildContext context) {
+    double containerAspectRatio = MediaQuery.of(context).size.width / MediaQuery.of(context).size.height;
+    double videoAspectRatio = controller.value.aspectRatio;
+
+    // Log aspect ratios to check if they are correct
+    print('⛔ Container aspect ratio: $containerAspectRatio');
+    print('⛔ Video aspect ratio: $videoAspectRatio');
+
+    // Set a threshold for when the video is considered stretched
+    double threshold = 0.5;
+
+    // Check if the video is stretched
+    bool isVideoStretched = (containerAspectRatio - videoAspectRatio).abs() > threshold;
+
+    // Adjust the height or width based on the video aspect ratio
+    double videoHeight = MediaQuery.of(context).size.width / videoAspectRatio;
+
+    if (isVideoStretched) {
+      // If the video is stretched, ensure it doesn't exceed the container height
+      videoHeight = 300;
+    }else{
+      videoHeight = MediaQuery.of(context).size.height;
+    }
+
     return VisibilityDetector(
       key: Key(widget.url),
       onVisibilityChanged: (visibilityInfo) {
@@ -81,10 +104,14 @@ class _VideoplayerState extends State<Videoplayer> {
           alignment: Alignment.center,
           children: [
             _isControllerInitialized
-                ? AspectRatio(
-                    aspectRatio: controller.value.aspectRatio,
-                    child: VideoPlayer(controller),
-                  )
+                ? FittedBox(
+              fit: BoxFit.cover, // Ensures the video fills the screen without stretching
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: videoHeight, // Adjusted height based on aspect ratio
+                child: VideoPlayer(controller),
+              ),
+            )
                 : const Center(child: CupertinoActivityIndicator()),
             if (_showPlayPauseIcon)
               Icon(

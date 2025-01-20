@@ -41,8 +41,7 @@ class _LightboxPageState extends State<LightboxPage> {
           // Update the drag distance and reduce opacity
           setState(() {
             _verticalDragDistance += details.delta.dy;
-            _opacity =
-                (1.0 - (_verticalDragDistance / 400).abs()).clamp(0.0, 1.0);
+            _opacity = (1.0 - (_verticalDragDistance / 400).abs()).clamp(0.0, 1.0);
           });
         },
         onVerticalDragEnd: (details) {

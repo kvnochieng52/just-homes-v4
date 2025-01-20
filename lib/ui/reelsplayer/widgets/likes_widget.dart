@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:just_apartment_live/api/api.dart';
 import 'dart:convert';
 import 'package:logger/logger.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 
 final logger = Logger();
+
 
 class LikeWidget extends StatefulWidget {
   final int videoId;
@@ -28,37 +28,11 @@ class _LikeWidgetState extends State<LikeWidget> {
   bool isLiked = false; // Initial like state
   int likeCount = 0; // Current like count
   bool isLoading = false; // API call status
-  List userLikes = [];
 
   @override
   void initState() {
     super.initState();
     likeCount = widget.initialLikes;
-
-    _checkVideoIsLiked(widget.videoId, widget.userId);
-  }
-
-  _checkVideoIsLiked(videoID, userID) async {
-    var data = {'user_id': userID, 'video_id': videoID};
-
-    var res = await CallApi().postData(data, 'reels/get-user-likes');
-
-    if (res.statusCode == 200) {
-      var body = json.decode(res.body);
-
-      if (body['success']) {
-        setState(() {
-          userLikes = body['data']['userLikes'];
-          bool result = userLikes.contains(videoID);
-
-          //print("DATA ARRAY" + videoID.toString());
-
-          if (result) {
-            isLiked = true;
-          }
-        });
-      }
-    }
   }
 
   Future<void> _toggleLike() async {
@@ -68,8 +42,9 @@ class _LikeWidgetState extends State<LikeWidget> {
       likeCount = isLiked ? likeCount + 1 : likeCount - 1;
     });
 
+
     final url =
-        'https://justhomes.co.ke/api/reels/update-likes?likes=$likeCount&videoId=${widget.videoId}&user_id=${widget.userId}&isLiked=${isLiked}';
+        'https://justhomes.co.ke/api/reels/update-likes?likes=$likeCount&videoId=${widget.videoId}&user_id=${widget.userId}';
 
     logger.i("URL ---> $url");
 

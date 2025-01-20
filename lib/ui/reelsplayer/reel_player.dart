@@ -1,12 +1,8 @@
 import 'dart:convert';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:just_apartment_live/ui/login/login.dart';
-import 'package:just_apartment_live/ui/reels/trimmer_view.dart';
 import 'package:just_apartment_live/ui/reelsplayer/widgets/mainwidget.dart';
 import 'package:just_apartment_live/ui/reelsplayer/widgets/video_player.dart';
 import 'package:path_provider/path_provider.dart';
@@ -29,7 +25,6 @@ class _ReelsState extends State<Reels> {
       'https://flipfit-cdn.akamaized.net/flip_hls/661f570aab9d840019942b80-473e0b/video_h1.m3u8'));
 
   bool isUserLoggedIn = false;
-  final List<File> _uploadedVideos = [];
   var userID = 0;
 
   @override
@@ -43,17 +38,11 @@ class _ReelsState extends State<Reels> {
   Future<void> _checkUserStatus() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     String? userData = localStorage.getString('user');
-
     setState(() {
-      if (userData != null && userData.isNotEmpty) {
-        isUserLoggedIn = true;
-        Map<String, dynamic> jsonMap = jsonDecode(userData);
-        logger.i("JSON MAP $jsonMap");
-        userID = jsonMap['id'] ?? 0;
-      } else {
-        isUserLoggedIn = false;
-        userID = 0; // Default value if user data is not available
-      }
+      isUserLoggedIn = userData != null && userData.isNotEmpty;
+      Map<String, dynamic> jsonMap = jsonDecode(userData!);
+      logger.i("JSON MAP $jsonMap");
+      userID = jsonMap['id'] ?? 0;
     });
   }
 
@@ -98,63 +87,15 @@ class _ReelsState extends State<Reels> {
     }
   }
 
-  _uploadVideo() async {
-    if (isUserLoggedIn) {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.video,
-        allowCompression: true,
-      );
-      if (result != null) {
-        final file = File(result.files.single.path!);
-        setState(() {
-          _uploadedVideos.add(file);
-        });
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => TrimmerView(file),
-          ),
-        );
-      }
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text(
-              'Please log in or create an account first',
-              style: TextStyle(fontSize: 15),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => LoginPage(),
-                    ),
-                  );
-                },
-                child: const Text('Log in'),
-              ),
-            ],
-          );
-        },
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       body: FutureBuilder<List<dynamic>>(
         future: _fetchVideos(),
         builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
-              child:
-                  Image.asset('images/animated_logo.gif'), // Show animated logo
+              child: Image.asset('images/animated_logo.gif'), // Show animated logo
             );
           }
 
@@ -167,8 +108,7 @@ class _ReelsState extends State<Reels> {
             return PreloadPageView.builder(
               scrollDirection: Axis.vertical,
               preloadPagesCount: 5,
-              controller:
-                  PreloadPageController(keepPage: false, initialPage: 0),
+              controller: PreloadPageController(keepPage: false, initialPage: 0),
               itemCount: videoUrls.length,
               itemBuilder: (BuildContext context, int index) {
                 String videoUrl = videoUrls[index]['video'];
@@ -183,115 +123,37 @@ class _ReelsState extends State<Reels> {
                 return FutureBuilder<String>(
                   future: _getCachedVideo(videoUrl),
                   builder: (context, videoSnapshot) {
-                    if (videoSnapshot.connectionState ==
-                        ConnectionState.waiting) {
+                    if (videoSnapshot.connectionState == ConnectionState.waiting) {
                       return Center(
-                        child: Image.asset(
-                            'images/animated_logo.gif'), // Show animated logo
+                        child: Image.asset('images/animated_logo.gif'), // Show animated logo
                       );
                     }
 
                     if (videoSnapshot.hasError) {
-                      return Center(
-                          child: Text(
-                              'Error caching video: ${videoSnapshot.error}'));
+                      return Center(child: Text('Error caching video: ${videoSnapshot.error}'));
                     }
 
                     if (videoSnapshot.hasData) {
                       String cachedVideoPath = videoSnapshot.data!;
-
-                      // return Stack(children: [
-                      //   // Full-screen black background
-                      //   Positioned.fill(
-                      //     child: Container(color: Colors.black),
-                      //   ),
-                      //   // Video player filling the screen
-                      //   Positioned.fill(
-                      //     child: AspectRatio(
-                      //       aspectRatio: 16 / 8,
-                      //       child: Videoplayer(url: cachedVideoPath),
-                      //     ),
-                      //   ),
-                      //   // Overlay for comments and user info
-                      //   CommentWithPublisher(
-                      //     userName: username,
-                      //     imageProfile: profile,
-                      //     description: description,
-                      //     isLoggedIn: isUserLoggedIn,
-                      //   ),
-                      //
-                      //   Positioned(
-                      //     bottom: 50,
-                      //     right: 10,
-                      //     width: 50,
-                      //     height: 250,
-                      //     child: likeShareCommentSave(
-                      //         likes,
-                      //         comments.length,
-                      //         shares,
-                      //         context,
-                      //         comments,
-                      //         cachedVideoPath,
-                      //         videoID,
-                      //         userID,
-                      //         isUserLoggedIn),
-                      //   ),
-                      //   // Username and profile photo at the bottom
-                      //   Positioned(
-                      //     bottom: 20, // Adjust as needed
-                      //     left: 10, // Adjust as needed
-                      //     right:
-                      //         10, // Optional: To center the content horizontally
-                      //     child: Row(
-                      //       children: [
-                      //         // Profile Photo
-                      //         CircleAvatar(
-                      //           radius: 20, // Adjust the size as needed
-                      //           backgroundImage: NetworkImage(
-                      //               profile), // Or AssetImage if using a local image
-                      //         ),
-                      //         SizedBox(
-                      //             width:
-                      //                 10), // Space between photo and username
-                      //         // Username
-                      //         Text(
-                      //           username,
-                      //           style: TextStyle(
-                      //             color: Colors
-                      //                 .white, // Ensure visibility over the video
-                      //             fontSize: 16, // Adjust font size
-                      //             fontWeight: FontWeight.bold,
-                      //           ),
-                      //         ),
-                      //       ],
-                      //     ),
-                      //   ),
-                      // ]);
-
                       return Stack(
                         children: [
-                          // Full-screen black background
+                          // Full-screen video player
                           Positioned.fill(
-                            child: Container(color: Colors.black),
-                          ),
-                          // Video player filling the screen
-                          Positioned.fill(
-                            child: AspectRatio(
-                              aspectRatio: 16 / 8,
-                              child: Videoplayer(url: cachedVideoPath),
+                            child: Container(
+                              color: Colors.black, // Ensure the background is black while video loads
+                              child: Videoplayer(url: cachedVideoPath), // Your video player
                             ),
                           ),
                           // Overlay for comments and user info
                           CommentWithPublisher(
                             userName: username,
-                            imageProfile: profile,
+                            imageProfile: profile.startsWith('http') || profile.startsWith('https')  ? profile : "https://justhomes.co.ke/$profile",
                             description: description,
                             isLoggedIn: isUserLoggedIn,
                           ),
                           // Like, Share, Comment, Save
-
                           Positioned(
-                            bottom: 150,
+                            bottom: 50,
                             right: 10,
                             width: 50,
                             height: 250,
@@ -307,76 +169,44 @@ class _ReelsState extends State<Reels> {
                               isUserLoggedIn,
                             ),
                           ),
-
+                          // Username, Profile Photo, and Description at the bottom, overlaying the video
                           Positioned(
-                            bottom: 85,
-                            right: 20,
-                            child: GestureDetector(
-                              onTap: _uploadVideo,
-                              child: Container(
-                                width: 56, // Button width (size of the circle)
-                                height:
-                                    56, // Button height (size of the circle)
-                                decoration: BoxDecoration(
-                                  color:
-                                      Colors.purple, // Button background color
-                                  shape: BoxShape.circle, // Makes it round
-                                ),
-                                child: Icon(
-                                  FontAwesomeIcons.plus,
-                                  color: Colors.white,
-                                  size: 30, // Icon size
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Username, Profile Photo, and Description at the bottom
-                          Positioned(
-                            bottom: 20, // Adjust as needed
-                            left: 10, // Adjust as needed
-                            right:
-                                10, // Optional: To center the content horizontally
+                            bottom: 50,  // Place at the very bottom of the screen
+                            left: 10,
+                            right: 10,
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // Profile Photo
                                 CircleAvatar(
                                   radius: 20, // Adjust the size as needed
-                                  backgroundImage: NetworkImage(
-                                      profile), // Or AssetImage for local images
+                                  backgroundImage: NetworkImage(profile.startsWith('http') || profile.startsWith('https')  ? profile : "https://justhomes.co.ke/$profile"),
                                 ),
-                                SizedBox(
-                                    width: 10), // Space between photo and text
+                                SizedBox(width: 10),
                                 // Username and Description
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       // Username
                                       Text(
                                         username,
                                         style: TextStyle(
-                                          color:
-                                              Colors.white, // Ensure visibility
-                                          fontSize: 16, // Adjust font size
+                                          color: Colors.white,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      SizedBox(
-                                          height:
-                                              5), // Space between username and description
+                                      SizedBox(height: 5),
                                       // Description
                                       Text(
                                         description,
                                         style: TextStyle(
-                                          color: Colors
-                                              .white70, // Slightly dimmer for distinction
-                                          fontSize: 14, // Adjust font size
+                                          color: Colors.white70,
+                                          fontSize: 14,
                                         ),
-                                        maxLines: 2, // Limit to 2 lines
-                                        overflow: TextOverflow
-                                            .ellipsis, // Add ellipsis for long text
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
@@ -397,6 +227,241 @@ class _ReelsState extends State<Reels> {
         },
       ),
     );
+
+
+    // return Scaffold(
+    //   body: FutureBuilder<List<dynamic>>(
+    //     future: _fetchVideos(),
+    //     builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
+    //       if (snapshot.connectionState == ConnectionState.waiting) {
+    //         return Center(
+    //           child:
+    //               Image.asset('images/animated_logo.gif'), // Show animated logo
+    //         );
+    //       }
+    //
+    //       if (snapshot.hasError) {
+    //         return Center(child: Text('Error: ${snapshot.error}'));
+    //       }
+    //
+    //       if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+    //         List<dynamic> videoUrls = snapshot.data!;
+    //         return PreloadPageView.builder(
+    //           scrollDirection: Axis.vertical,
+    //           preloadPagesCount: 5,
+    //           controller:
+    //               PreloadPageController(keepPage: false, initialPage: 0),
+    //           itemCount: videoUrls.length,
+    //           itemBuilder: (BuildContext context, int index) {
+    //             String videoUrl = videoUrls[index]['video'];
+    //             String username = videoUrls[index]['username'];
+    //             String profile = videoUrls[index]['profile'];
+    //             String description = videoUrls[index]['description'];
+    //             String likes = videoUrls[index]['likes'];
+    //             String shares = videoUrls[index]['shares'];
+    //             var videoID = videoUrls[index]['id'];
+    //             var comments = videoUrls[index]['comments'];
+    //
+    //             return FutureBuilder<String>(
+    //               future: _getCachedVideo(videoUrl),
+    //               builder: (context, videoSnapshot) {
+    //                 if (videoSnapshot.connectionState ==
+    //                     ConnectionState.waiting) {
+    //                   return Center(
+    //                     child: Image.asset(
+    //                         'images/animated_logo.gif'), // Show animated logo
+    //                   );
+    //                 }
+    //
+    //                 if (videoSnapshot.hasError) {
+    //                   return Center(
+    //                       child: Text(
+    //                           'Error caching video: ${videoSnapshot.error}'));
+    //                 }
+    //
+    //                 if (videoSnapshot.hasData) {
+    //                   String cachedVideoPath = videoSnapshot.data!;
+    //                   return Stack(
+    //                     children: [
+    //                       // Full-screen video player as the background
+    //                       Positioned.fill(
+    //                         child: Container(
+    //                           color: Colors.black, // Ensure the background is black while video loads
+    //                           child: Videoplayer(url: cachedVideoPath), // Your video player
+    //                         ),
+    //                       ),
+    //                       // Overlay for comments and user info
+    //                       CommentWithPublisher(
+    //                         userName: username,
+    //                         imageProfile: profile,
+    //                         description: description,
+    //                         isLoggedIn: isUserLoggedIn,
+    //                       ),
+    //                       // Like, Share, Comment, Save
+    //                       Positioned(
+    //                         bottom: 50,
+    //                         right: 10,
+    //                         width: 50,
+    //                         height: 250,
+    //                         child: likeShareCommentSave(
+    //                           likes,
+    //                           comments.length,
+    //                           shares,
+    //                           context,
+    //                           comments,
+    //                           cachedVideoPath,
+    //                           videoID,
+    //                           userID,
+    //                           isUserLoggedIn,
+    //                         ),
+    //                       ),
+    //                       // Username, Profile Photo, and Description at the bottom
+    //                       Positioned(
+    //                         bottom: 20, // Adjust as needed
+    //                         left: 10,   // Adjust as needed
+    //                         right: 10,  // Optional: To center the content horizontally
+    //                         child: Row(
+    //                           crossAxisAlignment: CrossAxisAlignment.start,
+    //                           children: [
+    //                             // Profile Photo
+    //                             CircleAvatar(
+    //                               radius: 20, // Adjust the size as needed
+    //                               backgroundImage: NetworkImage(profile), // Or AssetImage for local images
+    //                             ),
+    //                             SizedBox(width: 10), // Space between photo and text
+    //                             // Username and Description
+    //                             Expanded(
+    //                               child: Column(
+    //                                 crossAxisAlignment: CrossAxisAlignment.start,
+    //                                 children: [
+    //                                   // Username
+    //                                   Text(
+    //                                     username,
+    //                                     style: TextStyle(
+    //                                       color: Colors.white, // Ensure visibility
+    //                                       fontSize: 16,        // Adjust font size
+    //                                       fontWeight: FontWeight.bold,
+    //                                     ),
+    //                                   ),
+    //                                   SizedBox(height: 5), // Space between username and description
+    //                                   // Description
+    //                                   Text(
+    //                                     description,
+    //                                     style: TextStyle(
+    //                                       color: Colors.white70, // Slightly dimmer for distinction
+    //                                       fontSize: 14,         // Adjust font size
+    //                                     ),
+    //                                     maxLines: 2, // Limit to 2 lines
+    //                                     overflow: TextOverflow.ellipsis, // Add ellipsis for long text
+    //                                   ),
+    //                                 ],
+    //                               ),
+    //                             ),
+    //                           ],
+    //                         ),
+    //                       ),
+    //                     ],
+    //                   );
+    //
+    //
+    //
+    //                   // return Stack(
+    //                   //   children: [
+    //                   //     // Full-screen black background
+    //                   //     Positioned.fill(
+    //                   //       child: Container(color: Colors.black),
+    //                   //     ),
+    //                   //     // Video player filling the screen
+    //                   //     Positioned.fill(
+    //                   //       child: AspectRatio(
+    //                   //         aspectRatio: 16 / 8,
+    //                   //         child: Videoplayer(url: cachedVideoPath),
+    //                   //       ),
+    //                   //     ),
+    //                   //     // Overlay for comments and user info
+    //                   //     CommentWithPublisher(
+    //                   //       userName: username,
+    //                   //       imageProfile: profile,
+    //                   //       description: description,
+    //                   //       isLoggedIn: isUserLoggedIn,
+    //                   //     ),
+    //                   //     // Like, Share, Comment, Save
+    //                   //     Positioned(
+    //                   //       bottom: 50,
+    //                   //       right: 10,
+    //                   //       width: 50,
+    //                   //       height: 250,
+    //                   //       child: likeShareCommentSave(
+    //                   //         likes,
+    //                   //         comments.length,
+    //                   //         shares,
+    //                   //         context,
+    //                   //         comments,
+    //                   //         cachedVideoPath,
+    //                   //         videoID,
+    //                   //         userID,
+    //                   //         isUserLoggedIn,
+    //                   //       ),
+    //                   //     ),
+    //                   //     // Username, Profile Photo, and Description at the bottom
+    //                   //     Positioned(
+    //                   //       bottom: 20, // Adjust as needed
+    //                   //       left: 10,   // Adjust as needed
+    //                   //       right: 10,  // Optional: To center the content horizontally
+    //                   //       child: Row(
+    //                   //         crossAxisAlignment: CrossAxisAlignment.start,
+    //                   //         children: [
+    //                   //           // Profile Photo
+    //                   //           CircleAvatar(
+    //                   //             radius: 20, // Adjust the size as needed
+    //                   //             backgroundImage: NetworkImage(profile), // Or AssetImage for local images
+    //                   //           ),
+    //                   //           SizedBox(width: 10), // Space between photo and text
+    //                   //           // Username and Description
+    //                   //           Expanded(
+    //                   //             child: Column(
+    //                   //               crossAxisAlignment: CrossAxisAlignment.start,
+    //                   //               children: [
+    //                   //                 // Username
+    //                   //                 Text(
+    //                   //                   username,
+    //                   //                   style: TextStyle(
+    //                   //                     color: Colors.white, // Ensure visibility
+    //                   //                     fontSize: 16,        // Adjust font size
+    //                   //                     fontWeight: FontWeight.bold,
+    //                   //                   ),
+    //                   //                 ),
+    //                   //                 SizedBox(height: 5), // Space between username and description
+    //                   //                 // Description
+    //                   //                 Text(
+    //                   //                   description,
+    //                   //                   style: TextStyle(
+    //                   //                     color: Colors.white70, // Slightly dimmer for distinction
+    //                   //                     fontSize: 14,         // Adjust font size
+    //                   //                   ),
+    //                   //                   maxLines: 2, // Limit to 2 lines
+    //                   //                   overflow: TextOverflow.ellipsis, // Add ellipsis for long text
+    //                   //                 ),
+    //                   //               ],
+    //                   //             ),
+    //                   //           ),
+    //                   //         ],
+    //                   //       ),
+    //                   //     ),
+    //                   //   ],
+    //                   // );
+    //
+    //                 }
+    //                 return const Center(child: Text('Failed to load video.'));
+    //               },
+    //             );
+    //           },
+    //         );
+    //       }
+    //       return const Center(child: Text('No videos available'));
+    //     },
+    //   ),
+    // );
   }
 
   void _onShareFileFromCache(BuildContext context) async {
