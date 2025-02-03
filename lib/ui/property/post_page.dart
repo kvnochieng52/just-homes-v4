@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:just_apartment_live/api/api.dart';
 import 'package:just_apartment_live/ui/property/post_property/models/submit_property.dart';
+import 'package:just_apartment_live/ui/property/post_property/widgets/GMaps.dart';
 import 'package:just_apartment_live/widgets/header_main_widget.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
@@ -39,9 +40,8 @@ class _PostPageState extends State<PostPage> {
   bool _isSubRegionEnabled = false;
   bool _isLoadingSubRegions = false;
 
-  List<AssetEntity> images = <AssetEntity>[];
-  late List<File> _images;
-  final picker = ImagePicker();
+  List<File> _images = []; // List of selected image files
+  List<AssetEntity> _assetEntities = []; // List of selected asset entities
 
   bool _initDataFetched = false;
   bool _showRegionsInput = false;
@@ -57,7 +57,6 @@ class _PostPageState extends State<PostPage> {
   void initState() {
     super.initState();
     _getInitData();
-    _images = [];
   }
 
   _getInitData() async {
@@ -146,9 +145,9 @@ class _PostPageState extends State<PostPage> {
         final List<AssetEntity>? result = await AssetPicker.pickAssets(
           context,
           pickerConfig: AssetPickerConfig(
-            maxAssets: 40,
+            maxAssets: 20,
             requestType: RequestType.image,
-            selectedAssets: images,
+            selectedAssets: _assetEntities,
           ),
         );
 
@@ -163,7 +162,7 @@ class _PostPageState extends State<PostPage> {
 
           setState(() {
             _images.addAll(newImages);
-            images = result;
+            _assetEntities = result;
           });
         }
       } else {
@@ -183,12 +182,23 @@ class _PostPageState extends State<PostPage> {
     }
   }
 
+  Future<void> uploadImages(File image) async {
+    // Simulate a network delay
+    await Future.delayed(const Duration(seconds: 2));
+    print("Uploaded image: ${image.path}");
+  }
+
+  Future<void> uploadImage(File image) async {
+    // Simulate a network delay
+    await Future.delayed(const Duration(seconds: 2));
+    print("Uploaded image: ${image.path}");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Theme.of(context)
-          .scaffoldBackgroundColor, // Use theme's scaffold background color
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: buildHeader(context),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(8.0),
@@ -196,7 +206,7 @@ class _PostPageState extends State<PostPage> {
           width: double.infinity,
           child: Card(
             elevation: 1.0,
-            color: Theme.of(context).cardColor, // Use theme's card color
+            color: Theme.of(context).cardColor,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
@@ -233,28 +243,21 @@ class _PostPageState extends State<PostPage> {
     );
   }
 
-  Future<void> uploadImage(File image) async {
-    // Simulate a network delay
-    await Future.delayed(const Duration(seconds: 2));
-  }
-
-
-
   Widget _buildPostForm(context) {
     return Form(
       key: _formKey,
       child: Column(
         children: [
-
           ImagePreview(
-            images: _images, // List<File>
+            images: _images,
             onRemoveImage: (index) {
               setState(() {
                 _images.removeAt(index);
+                _assetEntities.removeAt(index);
               });
             },
-            onAddImage: () => pickAssets(context), // Your image picker logic
-            onUploadImage: uploadImage, // Your upload logic
+            onAddImage: () => pickAssets(context),
+            onUploadImage: uploadImages, // Only upload on form submission
           ),
 
 
@@ -267,36 +270,62 @@ class _PostPageState extends State<PostPage> {
               return null;
             },
           ),
-          TownInput(
-            townsList: _townsList,
-            userTown: _userTown,
-            isLoadingSubRegions: _isLoadingSubRegions,
-            isDarkMode: Theme.of(context).brightness == Brightness.dark,
-            onTownChanged: (selectedTown) {
-              setState(() {
-                _userTown = selectedTown?["id"].toString() ?? '';
-                _showRegionsInput = true;
-              });
-            },
-            fetchSubRegions: () => _getSubRegions(_userTown),
-            initDataFetched: _initDataFetched,
-          ),
-          SubRegionInput(
-            isSubRegionEnabled: _isSubRegionEnabled,
-            subRegionsList: _subRegionsList,
-            onChanged: (selectedSubRegion) {
-              setState(() {
-                _userRegion = selectedSubRegion?["id"].toString() ?? '';
-              });
-            },
-            validator: (value) {
-              if (value == null) {
-                return 'Please select sub-region';
+          SizedBox(height: 10),
+          LocationFormField(
+            apiKey: 'AIzaSyDdybb1niN-HUAAwsJeVBwTzXECC9UwdTs', // Replace with your API Key
+            hintText: "Enter your location",
+            onSaved: (value) {
+              if (value != null) {
+                print("Selected county: $value");
+
+                // Manually format the string to valid JSON
+                String formattedJson = value
+                    .replaceAll("{", "{\"")
+                    .replaceAll("}", "\"}")
+                    .replaceAll(": ", "\":\"")
+                    .replaceAll(", ", "\", \"");
+
+                // Decode into a Map
+                Map<String, dynamic> dataMap = jsonDecode(formattedJson);
+
+                _userTown = dataMap['county'].toString();
+                _userRegion = dataMap['locality'].toString();
               }
-              return null;
             },
-            selectedSubRegion: _userRegion,
           ),
+
+
+
+          // TownInput(
+          //   townsList: _townsList,
+          //   userTown: _userTown,
+          //   isLoadingSubRegions: _isLoadingSubRegions,
+          //   isDarkMode: Theme.of(context).brightness == Brightness.dark,
+          //   onTownChanged: (selectedTown) {
+          //     setState(() {
+          //       _userTown = selectedTown?["id"].toString() ?? '';
+          //       _showRegionsInput = true;
+          //     });
+          //   },
+          //   fetchSubRegions: () => _getSubRegions(_userTown),
+          //   initDataFetched: _initDataFetched,
+          // ),
+          // SubRegionInput(
+          //   isSubRegionEnabled: _isSubRegionEnabled,
+          //   subRegionsList: _subRegionsList,
+          //   onChanged: (selectedSubRegion) {
+          //     setState(() {
+          //       _userRegion = selectedSubRegion?["id"].toString() ?? '';
+          //     });
+          //   },
+          //   validator: (value) {
+          //     if (value == null) {
+          //       return 'Please select sub-region';
+          //     }
+          //     return null;
+          //   },
+          //   selectedSubRegion: _userRegion,
+          // ),
           NextButtonWidget(
             formKey: _formKey,
             images: _images,
@@ -310,6 +339,4 @@ class _PostPageState extends State<PostPage> {
       ),
     );
   }
-
-
 }

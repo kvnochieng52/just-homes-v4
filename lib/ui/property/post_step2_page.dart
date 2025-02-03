@@ -76,162 +76,91 @@ class _PostStep2PageState extends State<PostStep2Page> {
   }
 
   _getInitData() async {
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    var user = json.decode(localStorage.getString('user') ?? '{}');
+    try {
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      var user = json.decode(localStorage.getString('user') ?? '{}');
 
-    var data = {
-      'user_id': user['id'],
-      'propertyID': widget.propertyID,
-    };
+      var data = {
+        'user_id': user['id'],
+        'propertyID': widget.propertyID,
+      };
 
-    var res = await CallApi().postData(data, 'property/get-init-data-part-one');
-    // print(body['data']['PropertyTypesList']);
+      var res = await CallApi().postData(data, 'property/get-init-data-part-one');
 
-    if (res.statusCode == 200) {
-      var body = json.decode(res.body);
+      if (res.statusCode == 200) {
+        var body = json.decode(res.body);
 
-      //  print(body['data']['propertyDetails']);
+        if (body['success']) {
+          var propertyDetails = body['data']['propertyDetails'] ?? {};
 
-      if (body['success']) {
-        final List<dynamic> propertyTypesData =
-            body['data']['PropertyTypesList'];
-        List<Map<String, dynamic>> props = [];
-        propertyTypesData.asMap().forEach((index, pData) {
-          if (pData['id'] == body['data']['propertyDetails']['type_id']) {
-            setState(() {
-              propertyTypeSelectedIndex = index;
-            });
-          }
-          props.add({
-            'id': pData['id'],
-            'value': pData['value'],
-          });
-        });
-
-        final List<dynamic> propertyConditionsData =
-            body['data']['propertyConditionsList'];
-        List<Map<String, dynamic>> pcon = [];
-        propertyConditionsData.asMap().forEach((index, pdData) {
-          if (pdData['id'] == body['data']['propertyDetails']['condition_id']) {
-            setState(() {
-              propertyConditionSelectedIndex = index;
-            });
+          int? parseInt(dynamic value) {
+            if (value is int) return value;
+            if (value is String) return int.tryParse(value);
+            return null;
           }
 
-          pcon.add({
-            'index': index,
-            'id': pdData['id'],
-            'value': pdData['value'],
-          });
-        });
+          // Extract and safely parse values
+          int? typeId = parseInt(propertyDetails['type_id']);
+          int? conditionId = parseInt(propertyDetails['condition_id']);
+          int? furnishId = parseInt(propertyDetails['furnish_id']);
+          int? leaseTypeId = parseInt(propertyDetails['lease_type_id']);
+          int? landTypeId = parseInt(propertyDetails['land_type_id']);
+          int? landMeasurementId = parseInt(propertyDetails['land_measurement_id']);
 
-        final List<dynamic> furnishedData = body['data']['furnishedList'];
-        List<Map<String, dynamic>> furnArray = [];
-        furnishedData.asMap().forEach((index, fdData) {
-          if (fdData['id'] == body['data']['propertyDetails']['furnish_id']) {
-            setState(() {
-              propertyFurnishedSelectedIndex = index;
-            });
+          // Ensure list data is always an empty list if null
+          List<Map<String, dynamic>> parseList(List<dynamic>? rawList) {
+            return rawList?.map((item) => {
+              'id': parseInt(item['id']) ?? -1, // Ensure 'id' is an int
+              'value': item['value'],
+            }).toList() ?? [];
           }
-          furnArray.add({
-            'index': index,
-            'id': fdData['id'],
-            'value': fdData['value'],
+
+          // Populate lists
+          _propertTypesList = parseList(body['data']['PropertyTypesList']);
+          _propertConditionsList = parseList(body['data']['propertyConditionsList']);
+          _furnishedList = parseList(body['data']['furnishedList']);
+          _leaseTypesList = parseList(body['data']['leaseTypesList']);
+          _landTypesList = parseList(body['data']['landTypes']);
+          _landMeasurementsList = parseList(body['data']['landMeasurements']);
+
+          // Find selected indices safely
+          propertyTypeSelectedIndex = _propertTypesList.indexWhere((p) => p['id'] == typeId);
+          propertyConditionSelectedIndex = _propertConditionsList.indexWhere((p) => p['id'] == conditionId);
+          propertyFurnishedSelectedIndex = _furnishedList.indexWhere((p) => p['id'] == furnishId);
+          propertyLeaseTypeSelectedIndex = _leaseTypesList.indexWhere((p) => p['id'] == leaseTypeId);
+          landTypeSelectedIndex = _landTypesList.indexWhere((p) => p['id'] == landTypeId);
+          landMeasurementIndex = _landMeasurementsList.indexWhere((p) => p['id'] == landMeasurementId);
+
+          // Ensure index defaults to 0 if not found (-1 means not found)
+          propertyTypeSelectedIndex = propertyTypeSelectedIndex == -1 ? 0 : propertyTypeSelectedIndex;
+          propertyConditionSelectedIndex = propertyConditionSelectedIndex == -1 ? 0 : propertyConditionSelectedIndex;
+          propertyFurnishedSelectedIndex = propertyFurnishedSelectedIndex == -1 ? 0 : propertyFurnishedSelectedIndex;
+          propertyLeaseTypeSelectedIndex = propertyLeaseTypeSelectedIndex == -1 ? 0 : propertyLeaseTypeSelectedIndex;
+          landTypeSelectedIndex = landTypeSelectedIndex == -1 ? 0 : landTypeSelectedIndex;
+          landMeasurementIndex = landMeasurementIndex == -1 ? 0 : landMeasurementIndex;
+
+          // Set state
+          setState(() {
+            _initDataFetched = true;
+            _descriptionController.text = propertyDetails['property_description'] ?? "";
+            _addressController.text = propertyDetails['address'] ?? "";
+            _amountController.text = propertyDetails['amount']?.toString() ?? "";
+            _sqmController.text = propertyDetails['measurements']?.toString() ?? "";
+            _parkingSpacesController.text = propertyDetails['parking_spaces']?.toString() ?? "";
+            _propertyType = typeId?.toString() ?? "";
+            _propertyCondition = conditionId?.toString() ?? "";
+            _propertyFurnished = furnishId?.toString() ?? "";
+            _leaseType = leaseTypeId?.toString() ?? "";
+            _bedrooms = propertyDetails['bedrooms']?.toString() ?? "";
           });
-        });
-
-        final List<dynamic> leaseData = body['data']['leaseTypesList'];
-        List<Map<String, dynamic>> leaseArray = [];
-        leaseData.asMap().forEach((index, laData) {
-          if (laData['id'] ==
-              body['data']['propertyDetails']['lease_type_id']) {
-            setState(() {
-              propertyLeaseTypeSelectedIndex = index;
-            });
-          }
-          leaseArray.add({
-            'index': index,
-            'id': laData['id'],
-            'value': laData['value'],
-          });
-        });
-
-        final List<dynamic> landTypesData = body['data']['landTypes'];
-        List<Map<String, dynamic>> landTypesArray = [];
-        landTypesData.asMap().forEach((index, laData) {
-          if (laData['id'] == body['data']['propertyDetails']['land_type_id']) {
-            setState(() {
-              landTypeSelectedIndex = index;
-            });
-          }
-          landTypesArray.add({
-            'index': index,
-            'id': laData['id'],
-            'value': laData['value'],
-          });
-        });
-
-        final List<dynamic> landMeasurementsData =
-            body['data']['landMeasurements'];
-        List<Map<String, dynamic>> landMeasurementsArray = [];
-        landMeasurementsData.asMap().forEach((index, laData) {
-          if (laData['id'] ==
-              body['data']['propertyDetails']['land_measurement _id']) {
-            setState(() {
-              landTypeSelectedIndex = index;
-            });
-          }
-          landMeasurementsArray.add({
-            'index': index,
-            'id': laData['id'],
-            'value': laData['value'],
-          });
-        });
-
-        setState(() {
-          _propertTypesList = props;
-          _propertConditionsList = pcon;
-          _furnishedList = furnArray;
-          _leaseTypesList = leaseArray;
-          _landTypesList = landTypesArray;
-          _landMeasurementsList = landMeasurementsArray;
-          _initDataFetched = true;
-          propertyDetails = body['data']['propertyDetails'];
-
-          _descriptionController.text =
-              body['data']['propertyDetails']['property_description'] ?? "";
-          _addressController.text =
-              body['data']['propertyDetails']['address'] ?? "";
-          _amountController.text =
-              body['data']['propertyDetails']['amount'] != null
-                  ? body['data']['propertyDetails']['amount'].toString()
-                  : "";
-          _sqmController.text =
-              body['data']['propertyDetails']['measurements'] != null
-                  ? body['data']['propertyDetails']['measurements'].toString()
-                  : "";
-          _parkingSpacesController.text =
-              body['data']['propertyDetails']['parking_spaces'].toString();
-          // _sqmController.text =
-          //     body['data']['propertyDetails']['measurements'].toString();
-          _propertyType = body['data']['propertyDetails']['type_id'].toString();
-          _propertyCondition =
-              body['data']['propertyDetails']['condition_id'].toString();
-          _propertyFurnished =
-              body['data']['propertyDetails']['furnish_id'].toString();
-          _leaseType =
-              body['data']['propertyDetails']['lease_type_id'].toString();
-          _bedrooms = body['data']['propertyDetails']['bedrooms'] != null
-              ? body['data']['propertyDetails']['bedrooms'].toString()
-              : "";
-          _parkingSpacesController.text =
-              body['data']['propertyDetails']['parking_spaces'] != null
-                  ? body['data']['propertyDetails']['parking_spaces'].toString()
-                  : "";
-        });
+        }
       }
+    } catch (e) {
+      print("Error fetching property details: $e");
     }
   }
+
+
 
   _submitProperty(context) async {
     if (!_formKey.currentState!.validate()) {
