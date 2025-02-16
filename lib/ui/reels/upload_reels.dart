@@ -40,7 +40,7 @@ class _UserReelsState extends State<UserReels> {
         Uri.parse(uri),
         headers: {'Content-Type': 'application/json'},
         body:
-            json.encode({'user_id': user['id']}), // Passing user id to the API
+        json.encode({'user_id': user['id']}), // Passing user id to the API
       );
 
       if (response.statusCode == 200) {
@@ -122,7 +122,7 @@ class _UserReelsState extends State<UserReels> {
           // Remove the deleted reel from the list
 
           _isDeleting =
-              false; // Set deleting state to false after successful deletion
+          false; // Set deleting state to false after successful deletion
         });
         // Refresh the list of reels after deletion
         await _getUserReels();
@@ -142,210 +142,210 @@ class _UserReelsState extends State<UserReels> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: const Text(
-            'Reels',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: const Color(0xFF252742),
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              // Upload video card
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                color: Colors.grey[200],
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.video_file),
-                            label: const Text('UPLOAD VIDEO'),
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: Colors.purple,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 12),
-                              textStyle: const TextStyle(fontSize: 18),
-                            ),
-                            onPressed: () async {
-                              final result =
-                                  await FilePicker.platform.pickFiles(
-                                type: FileType.video,
-                                allowCompression: true,
-                              );
-                              if (result != null) {
-                                final file = File(result.files.single.path!);
-                                setState(() {
-                                  _uploadedVideos.add(file);
-                                });
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => TrimmerView(file),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
+    backgroundColor: Colors.white,
+    appBar: AppBar(
+      title: const Text(
+        'Reels',
+        style: TextStyle(color: Colors.white),
+      ),
+      backgroundColor: const Color(0xFF252742),
+      iconTheme: const IconThemeData(color: Colors.white),
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          // Upload video card
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            color: Colors.grey[200],
+            child: SizedBox(
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.video_file),
+                        label: const Text('UPLOAD VIDEO'),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.purple,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          textStyle: const TextStyle(fontSize: 18),
                         ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Click on Upload video to get started',
-                          style: TextStyle(fontSize: 15),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                        onPressed: () async {
+                          final result =
+                          await FilePicker.platform.pickFiles(
+                            type: FileType.video,
+                            allowCompression: true,
+                          );
+                          if (result != null) {
+                            final file = File(result.files.single.path!);
+                            setState(() {
+                              _uploadedVideos.add(file);
+                            });
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => TrimmerView(file),
+                              ),
+                            );
+                          }
+                        },
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Click on Upload video to get started',
+                      style: TextStyle(fontSize: 15),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
+            ),
+          ),
 
-              const SizedBox(height: 20),
-              // User reels list card
-              Expanded(
-                child: Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  color: Colors.grey[200],
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 10),
-                        if (_userReels.isEmpty)
-                          const Text(
-                            "No reels yet.",
-                            style: TextStyle(fontSize: 18, color: Colors.grey),
-                          )
-                        else
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: _userReels.length,
-                              itemBuilder: (context, index) {
-                                final reel = _userReels[index];
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: 10),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Row(
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          child: Image.network(
-                                            Configuration.WEB_URL +
-                                                reel['screenshot'],
-                                            width: 90,
-                                            height: 90,
-                                            fit: BoxFit.cover,
+          const SizedBox(height: 20),
+          // User reels list card
+          Expanded(
+            child: Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              color: Colors.grey[200],
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    if (_userReels.isEmpty)
+                      const Text(
+                        "No reels yet.",
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      )
+                    else
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: _userReels.length,
+                          itemBuilder: (context, index) {
+                            final reel = _userReels[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius:
+                                      BorderRadius.circular(10),
+                                      child: Image.network(
+                                        Configuration.WEB_URL +
+                                            reel['screenshot'],
+                                        width: 90,
+                                        height: 90,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment
+                                                .spaceBetween,
+                                            children: [
+                                              Text(
+                                                _formatDate(
+                                                    reel['created_at']),
+                                                style: const TextStyle(
+                                                    fontSize: 14),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(
+                                                    Icons.delete,
+                                                    color: Colors.grey),
+                                                onPressed: () {
+                                                  _deleteReel(reel['id']
+                                                      .toString());
+                                                },
+                                              ),
+                                            ],
                                           ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                          const SizedBox(height: 10),
+                                          Row(
                                             children: [
                                               Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
                                                 children: [
-                                                  Text(
-                                                    _formatDate(
-                                                        reel['created_at']),
-                                                    style: const TextStyle(
-                                                        fontSize: 14),
-                                                  ),
-                                                  IconButton(
-                                                    icon: const Icon(
-                                                        Icons.delete,
-                                                        color: Colors.grey),
-                                                    onPressed: () {
-                                                      _deleteReel(reel['id']
-                                                          .toString());
-                                                    },
-                                                  ),
+                                                  const FaIcon(
+                                                      FontAwesomeIcons
+                                                          .heart,
+                                                      size: 16),
+                                                  const SizedBox(width: 4),
+                                                  Text('${reel['likes']}'),
                                                 ],
                                               ),
-                                              const SizedBox(height: 10),
+                                              const SizedBox(width: 16),
                                               Row(
                                                 children: [
-                                                  Row(
-                                                    children: [
-                                                      const FaIcon(
-                                                          FontAwesomeIcons
-                                                              .heart,
-                                                          size: 16),
-                                                      const SizedBox(width: 4),
-                                                      Text('${reel['likes']}'),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(width: 16),
-                                                  Row(
-                                                    children: [
-                                                      const FaIcon(
-                                                          FontAwesomeIcons
-                                                              .share,
-                                                          size: 16),
-                                                      const SizedBox(width: 4),
-                                                      Text('${reel['shares']}'),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(width: 16),
-                                                  Row(
-                                                    children: [
-                                                      const Icon(Icons.comment,
-                                                          size: 16),
-                                                      const SizedBox(width: 4),
-                                                      Text(
-                                                          '${reel['comments']?.length ?? 0}'),
-                                                    ],
-                                                  ),
+                                                  const FaIcon(
+                                                      FontAwesomeIcons
+                                                          .share,
+                                                      size: 16),
+                                                  const SizedBox(width: 4),
+                                                  Text('${reel['shares']}'),
+                                                ],
+                                              ),
+                                              const SizedBox(width: 16),
+                                              Row(
+                                                children: [
+                                                  const Icon(Icons.comment,
+                                                      size: 16),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                      '${reel['comments']?.length ?? 0}'),
                                                 ],
                                               ),
                                             ],
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-        // Show loader while deleting
-        floatingActionButton:
-            _isDeleting ? const CircularProgressIndicator() : null,
-      );
+        ],
+      ),
+    ),
+    // Show loader while deleting
+    floatingActionButton:
+    _isDeleting ? const CircularProgressIndicator() : null,
+  );
 
   String _formatDate(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
       final formatter =
-          DateFormat('MMMM d, yyyy HH:mm'); // Use 'HH' for 24-hour format
+      DateFormat('MMMM d, yyyy HH:mm'); // Use 'HH' for 24-hour format
       return formatter.format(date);
     } catch (e) {
       print("Error formatting date: $e");

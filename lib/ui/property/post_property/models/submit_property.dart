@@ -30,14 +30,24 @@ class PropertySubmissionService {
         ),
       );
     } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PostStep2Page(
-            propertyID: propertyID.toString(),
+
+      print("PROPPPPPPPPPPPPPPPPPPPP $propertyID");
+      if (propertyID != null && propertyID is String) {
+
+        propertyID = 1.toString();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PostStep2Page(
+              propertyID: propertyID == 0 ? "1" : propertyID.toString(),
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        // Handle invalid propertyID
+        print('Invalid propertyID--------->' + propertyID);
+      }
+
       // Loading().loader(context, "Processing...Please wait");
 
       SharedPreferences localStorage = await SharedPreferences.getInstance();

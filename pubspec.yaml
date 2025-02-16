@@ -77,6 +77,13 @@ dependencies:
   flutter_typeahead: ^4.0.0
   google_maps_flutter: ^2.2.5
   google_places_flutter:
+  audioplayers:
+  video_editor:
+  flutter_sound:
+  image_editor_plus:
+  record:
+  ffmpeg_kit_flutter:
+
 
 dev_dependencies:
   flutter_lints: ^3.0.0
