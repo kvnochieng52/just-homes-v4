@@ -1,22 +1,20 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-
-import '../../../reelsplayer/reels_page.dart';
 
 class ImagePreview extends StatefulWidget {
   final List<File> images;
   final Function(int) onRemoveImage;
   final VoidCallback onAddImage;
-  final Future<void> Function(File image) onUploadImage;
 
   const ImagePreview({
     super.key,
     required this.images,
     required this.onRemoveImage,
     required this.onAddImage,
-    required this.onUploadImage,
+    required Future<void> Function(File image) onUploadImage,
   });
 
   @override
@@ -24,7 +22,14 @@ class ImagePreview extends StatefulWidget {
 }
 
 class _ImagePreviewState extends State<ImagePreview> {
-  bool _isExpanded = false; // Controls the collapsible state
+  bool _isExpanded = false;
+  List<String> uploadedImagePaths = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedImagePaths();
+  }
 
   void _toggleExpandCollapse() {
     setState(() {
@@ -32,16 +37,32 @@ class _ImagePreviewState extends State<ImagePreview> {
     });
   }
 
+  Future<void> _loadSavedImagePaths() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      uploadedImagePaths = prefs.getStringList('uploaded_images') ?? [];
+    });
+  }
+
+  Future<void> _saveImagePath(String path) async {
+    final prefs = await SharedPreferences.getInstance();
+    uploadedImagePaths.add(path);
+    await prefs.setStringList('uploaded_images', uploadedImagePaths);
+  }
+
   Future<String> _uploadImage(File image) async {
     final url = Uri.parse('https://justhomes.co.ke/api/property/upload-property-image');
     final request = http.MultipartRequest('POST', url);
     request.files.add(await http.MultipartFile.fromPath('image', image.path));
+
     final response = await request.send();
     final responseData = await response.stream.bytesToString();
-    logger.i('RESPNSE IOMG + ${json.decode(responseData)} + ${response.statusCode}');
+
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(responseData);
-      return data['image_path']; // Adjust based on actual API response format
+      String imagePath = data['image_path'];
+      await _saveImagePath(imagePath);
+      return imagePath;
     } else {
       throw Exception('Failed to upload image');
     }
@@ -53,9 +74,7 @@ class _ImagePreviewState extends State<ImagePreview> {
         ? widget.images.length
         : (widget.images.length > 6 ? 6 : widget.images.length);
 
-    // Combine "Add Image" button and images into a single list
     final List<Widget> items = [
-      // Add Image Button
       GestureDetector(
         onTap: widget.onAddImage,
         child: Container(
@@ -69,7 +88,6 @@ class _ImagePreviewState extends State<ImagePreview> {
           ),
         ),
       ),
-      // Image items (if available)
       if (widget.images.isNotEmpty)
         ...List.generate(visibleImagesCount, (index) {
           return Stack(
@@ -81,17 +99,17 @@ class _ImagePreviewState extends State<ImagePreview> {
                     return Container(
                       color: Colors.black.withOpacity(0.1),
                       child: const Center(
-                        child: SizedBox(child: CircularProgressIndicator(color: Colors.purple),height: 10, width: 10),
+                        child: SizedBox(
+                          height: 10, width: 10,
+                          child: CircularProgressIndicator(color: Colors.purple),
+                        ),
                       ),
                     );
                   } else if (snapshot.hasError) {
                     return Container(
                       color: Colors.red.withOpacity(0.5),
-                      child: Center(
-                        child: Text(
-                          'Error',
-                          style: const TextStyle(color: Colors.white),
-                        ),
+                      child: const Center(
+                        child: Text('Error', style: TextStyle(color: Colors.white)),
                       ),
                     );
                   } else {
@@ -144,10 +162,10 @@ class _ImagePreviewState extends State<ImagePreview> {
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4, // Number of items per row
+            crossAxisCount: 4,
             crossAxisSpacing: 8.0,
             mainAxisSpacing: 8.0,
-            childAspectRatio: 1, // Maintain square items
+            childAspectRatio: 1,
           ),
           itemCount: items.length,
           itemBuilder: (context, index) => items[index],

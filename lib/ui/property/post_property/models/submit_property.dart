@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:just_apartment_live/ui/property/post_step2_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PropertySubmissionService {
   Future<Map<String, dynamic>> submitProperty({
@@ -19,6 +20,8 @@ class PropertySubmissionService {
     required BuildContext context,
   }) async {
     print("Submitting property...");
+
+    clearSavedImages(); // Clear saved images before submitting
 
     final String url = "https://justhomes.co.ke/api/property/post";
     String imagesString = images.join(',');
@@ -85,5 +88,12 @@ class PropertySubmissionService {
         "error": e.toString(),
       };
     }
+  }
+
+
+  Future<void> clearSavedImages() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('uploaded_images'); // Remove the stored image paths list
+    print('Saved image paths cleared.');
   }
 }

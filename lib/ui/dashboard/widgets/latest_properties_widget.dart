@@ -78,6 +78,13 @@ class _LatestPropertiesWidgetState extends State<LatestPropertiesWidget>
                 .split(", ")
                 .toList();
 
+        print("^^^^^^^^^^^^^^^^^");
+
+print(propertyImagesList);
+
+
+        print("^^^^^^^^^^^^^^^^^");
+
         int currentImageIndex = 0;
 
         // Determine the icon color based on local favorite status

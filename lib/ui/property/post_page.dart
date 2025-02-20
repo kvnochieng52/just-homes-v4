@@ -45,6 +45,7 @@ class _PostPageState extends State<PostPage> {
 
   List<File> _images = []; // List of selected image files
   List<AssetEntity> _assetEntities = []; // List of selected asset entities
+  List<String> uploadedImagePaths = [];
 
   bool _initDataFetched = false;
   bool _showRegionsInput = false;
@@ -260,21 +261,41 @@ class _PostPageState extends State<PostPage> {
     );
   }
 
+
+
+  Future<void> _loadSavedImagePaths() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      uploadedImagePaths = prefs.getStringList('uploaded_images') ?? [];
+    });
+  }
+
   Widget _buildPostForm(context) {
     return Form(
       key: _formKey,
       child: Column(
         children: [
+          // ImagePreview(
+          //   images: _images,
+          //   onRemoveImage: (index) {
+          //     setState(() {
+          //       _images.removeAt(index);
+          //       _assetEntities.removeAt(index);
+          //     });
+          //   },
+          //   onAddImage: () => pickAssets(context),
+          //   onUploadImage: uploadImages, // Only upload on form submission
+          // ),
+
           ImagePreview(
             images: _images,
             onRemoveImage: (index) {
               setState(() {
                 _images.removeAt(index);
-                _assetEntities.removeAt(index);
               });
             },
             onAddImage: () => pickAssets(context),
-            onUploadImage: uploadImages, // Only upload on form submission
+            onUploadImage: uploadImages,
           ),
           TitleInput(
             titleController: _titleController,
@@ -296,7 +317,7 @@ class _PostPageState extends State<PostPage> {
                 print("Selected LAT: ${value['latitude']}");
                 print("Selected LON: ${value['longitude']}");
                 _userTown = value['locality'] ?? "Nairobi";
-                _userRegion = value['county'];
+                _userRegion = value['county'] ?? "Nairobi";
                 _lat = value['latitude'];
                 _lon = value['longitude'];
               }
@@ -318,6 +339,14 @@ class _PostPageState extends State<PostPage> {
           ElevatedButton(
             onPressed: () {
               _formKey.currentState!.save();
+              if(uploadedImagePaths.isEmpty){
+                _loadSavedImagePaths();
+                setState(() {});
+              }
+
+
+              print("MAPICHA $_images");
+              print("MAPICHA $uploadedImagePaths");
 
               _propertySubmissionService.submitProperty(
                   step: 1,
@@ -330,7 +359,7 @@ class _PostPageState extends State<PostPage> {
                   countryCode: "KE",
                   address: _userTown,
                   userId: _userId,
-                  images: _images.map((e) => e.path).toList(),
+                  images: uploadedImagePaths,
                   context: context);
             },
             style: ElevatedButton.styleFrom(
