@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 
 class LocationFormField extends StatefulWidget {
   final String apiKey;
-  final Function(String?)? onSaved;
+  final Function(Map<String, dynamic>?)? onSaved;
   final String? initialValue;
   final String hintText;
 
@@ -40,39 +40,46 @@ class _LocationFormFieldState extends State<LocationFormField> {
     super.dispose();
   }
 
-  Future<Map?> getCountyFromPlaceId(String placeId) async {
+  Future<Map<String, dynamic>?> getCountyFromPlaceId(String placeId) async {
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?place_id=$placeId&key=${widget.apiKey}';
     final response = await http.get(Uri.parse(url));
     final data = json.decode(response.body);
 
+    print("API Response: $data"); // Debugging
+
     if (data['status'] == 'OK') {
       List addressComponents = data['results'][0]['address_components'];
-
-      print("ADDRESS   ---->" + addressComponents.toString());
       Map<String, dynamic> addressInfo = {};
 
       for (var component in addressComponents) {
         if (component['types'].contains('administrative_area_level_1')) {
           addressInfo["county"] = component['long_name'];
         }
-
         if (component['types'].contains('sublocality_level_1')) {
           addressInfo["locality"] = component['long_name'];
         }
       }
 
+      addressInfo["latitude"] = data['results'][0]['geometry']['location']['lat'];
+      addressInfo["longitude"] = data['results'][0]['geometry']['location']['lng'];
+
+      print("Parsed Location Data: $addressInfo"); // Debugging
+
       return addressInfo;
+    } else {
+      print("API Error: ${data['status']} - ${data['error_message']}");
     }
-    return {};
+    return null;
   }
+
 
   @override
   Widget build(BuildContext context) {
-    return FormField<String>(
-      initialValue: widget.initialValue,
+    return FormField<Map<String, dynamic>>(
+      initialValue: null,
       onSaved: widget.onSaved,
-      builder: (FormFieldState<String> state) {
+      builder: (FormFieldState<Map<String, dynamic>> state) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -95,18 +102,17 @@ class _LocationFormFieldState extends State<LocationFormField> {
                 getPlaceDetailWithLatLng: (Prediction prediction) async {
                   if (prediction.placeId != null) {
                     final county = await getCountyFromPlaceId(prediction.placeId!);
-                    state.didChange(county.toString());
+                    state.didChange(county);
                     _controller.text = prediction.description ?? '';
                   }
                 },
                 itemClick: (Prediction prediction) async {
                   if (prediction.placeId != null) {
                     final county = await getCountyFromPlaceId(prediction.placeId!);
-                    state.didChange(county.toString());
+                    state.didChange(county);
                     _controller.text = prediction.description ?? '';
                   }
                 },
-                // Fixed itemBuilder signature
                 itemBuilder: (context, index, prediction) => ListTile(
                   title: Text(prediction.description ?? ''),
                 ),

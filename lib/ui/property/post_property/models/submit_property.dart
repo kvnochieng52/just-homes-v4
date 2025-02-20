@@ -1,83 +1,89 @@
-import 'package:just_apartment_live/ui/property/post_step2_page.dart';
-import 'package:just_apartment_live/models/configuration.dart';
-
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:just_apartment_live/ui/property/post_step2_page.dart';
 
 class PropertySubmissionService {
-  Future<void> submitProperty({
+  Future<Map<String, dynamic>> submitProperty({
+    required int step,
+    required String propertyTitle,
+    required String town,
+    required String subRegion,
+    required double latitude,
+    required double longitude,
+    required String country,
+    required String countryCode,
+    required String address,
+    required int userId,
+    required List<String> images,
     required BuildContext context,
-    required GlobalKey<FormState> formKey,
-    required List<File> images,
-    required String userTown,
-    required String userRegion,
-    required TextEditingController titleController,
-    required String propertyID,
   }) async {
-    if (!formKey.currentState!.validate()) {
-      return;
-    }
-    formKey.currentState!.save();
+    print("Submitting property...");
 
-    if (images.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please upload a photo first'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } else {
+    final String url = "https://justhomes.co.ke/api/property/post";
+    String imagesString = images.join(',');
 
-      print("PROPPPPPPPPPPPPPPPPPPPP $propertyID");
-      if (propertyID != null && propertyID is String) {
+    final Map<String, dynamic> queryParams = {
+      "step": step.toString(),
+      "propertyTitle": propertyTitle,
+      "town": town,
+      "subRegion": subRegion,
+      "latitude": latitude.toString(),
+      "longitude": longitude.toString(),
+      "country": country,
+      "countryCode": countryCode,
+      "address": address,
+      "user_id": userId.toString(),
+      "images": imagesString,
+    };
 
-        propertyID = 1.toString();
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PostStep2Page(
-              propertyID: propertyID == 0 ? "1" : propertyID.toString(),
-            ),
-          ),
-        );
+    print("Request Params: $queryParams");
+    final Uri uri = Uri.parse(url).replace(queryParameters: queryParams);
+    print("Request URL: $uri");
+
+    try {
+      final response = await http.post(uri);
+
+      print("Response Status Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Map<String, dynamic> responseData = jsonDecode(response.body);
+
+        if (responseData.containsKey('data') &&
+            responseData['data'].containsKey('propertyID')) {
+          String propertyID = responseData['data']['propertyID'].toString();
+
+          if (context.mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PostStep2Page(propertyID: propertyID),
+              ),
+            );
+          }
+
+          return {"success": true, "propertyID": propertyID};
+        } else {
+          return {
+            "success": false,
+            "message": "Invalid response structure",
+            "error": responseData,
+          };
+        }
       } else {
-        // Handle invalid propertyID
-        print('Invalid propertyID--------->' + propertyID);
+        return {
+          "success": false,
+          "message": "Failed to submit property",
+          "error": jsonDecode(response.body),
+        };
       }
-
-      // Loading().loader(context, "Processing...Please wait");
-
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      var user = json.decode(localStorage.getString('user') ?? '{}');
-
-      final uri = Uri.parse("${Configuration.API_URL}property/post");
-      final request = http.MultipartRequest('POST', uri);
-
-      for (var imagePath in images) {
-        final file =
-            await http.MultipartFile.fromPath('images[]', imagePath.path);
-        request.files.add(file);
-      }
-
-      request.fields['town'] = userTown;
-      request.fields['region'] = userRegion;
-      request.fields['title'] = titleController.text;
-      request.fields['user_id'] = user['id'].toString();
-      request.fields['step'] = '4';
-      request.fields['propertyID'] = propertyID;
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200) {
-        // Handle successful response
-      } else {
-        Navigator.pop(context);
-        print('Failed to upload images');
-      }
+    } catch (e) {
+      return {
+        "success": false,
+        "message": "An error occurred",
+        "error": e.toString(),
+      };
     }
   }
 }

@@ -75,6 +75,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
     _getInitData();
   }
 
+
   _getInitData() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var user = json.decode(localStorage.getString('user') ?? '{}');
@@ -85,54 +86,45 @@ class _PostStep2PageState extends State<PostStep2Page> {
     };
 
     var res = await CallApi().postData(data, 'property/get-init-data-part-one');
-    // print(body['data']['PropertyTypesList']);
 
     if (res.statusCode == 200) {
       var body = json.decode(res.body);
 
-      //  print(body['data']['propertyDetails']);
+      if (body['success'] && body['data'] != null) {
+        if (body['data']['propertyDetails'] == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Property details not found. Please try again.')),
+          );
+          Navigator.pop(context); // Go back to the previous page
+          return;
+        }
 
-      if (body['success']) {
-        final List<dynamic> propertyTypesData =
-            body['data']['PropertyTypesList'];
+        var propertyDetails = body['data']['propertyDetails'];
+
+        // Process propertyTypesData
+        final List<dynamic> propertyTypesData = body['data']['PropertyTypesList'];
         List<Map<String, dynamic>> props = [];
         propertyTypesData.asMap().forEach((index, pData) {
-          print("PDATA-------------> $pData");
-
-          print("PDATA------66666-------> ${body['data']['propertyDetails']}");
-
-          if (body['data']['propertyDetails'] != null &&
-              body['data']['propertyDetails'].isNotEmpty &&
-              pData['id'] == body['data']['propertyDetails'][0]['type_id']) {
+          if (pData['id'] == propertyDetails['type_id']) {
             setState(() {
               propertyTypeSelectedIndex = index;
             });
-          } else {
-            propertyTypeSelectedIndex = pData['id'];
           }
-
-
           props.add({
             'id': pData['id'],
             'value': pData['value'],
           });
         });
 
-        final List<dynamic> propertyConditionsData =
-            body['data']['propertyConditionsList'];
+        // Process propertyConditionsList
+        final List<dynamic> propertyConditionsData = body['data']['propertyConditionsList'];
         List<Map<String, dynamic>> pcon = [];
         propertyConditionsData.asMap().forEach((index, pdData) {
-
-
-          if (body['data']['propertyDetails'].isNotEmpty && pdData['id'] == body['data']['propertyDetails'][0]['condition_id']) {
+          if (pdData['id'] == propertyDetails['condition_id']) {
             setState(() {
               propertyConditionSelectedIndex = index;
             });
-          }else{
-            propertyConditionSelectedIndex = pdData['id'];
           }
-
-
           pcon.add({
             'index': index,
             'id': pdData['id'],
@@ -140,17 +132,15 @@ class _PostStep2PageState extends State<PostStep2Page> {
           });
         });
 
+        // Process furnishedList
         final List<dynamic> furnishedData = body['data']['furnishedList'];
         List<Map<String, dynamic>> furnArray = [];
         furnishedData.asMap().forEach((index, fdData) {
-          if (body['data']['propertyDetails'].isNotEmpty && fdData['id'] == body['data']['propertyDetails'][0]['furnish_id']) {
+          if (fdData['id'] == propertyDetails['furnish_id']) {
             setState(() {
               propertyFurnishedSelectedIndex = index;
             });
-          }else{
-            propertyFurnishedSelectedIndex = fdData['id'];
           }
-
           furnArray.add({
             'index': index,
             'id': fdData['id'],
@@ -158,19 +148,15 @@ class _PostStep2PageState extends State<PostStep2Page> {
           });
         });
 
+        // Process leaseTypesList
         final List<dynamic> leaseData = body['data']['leaseTypesList'];
         List<Map<String, dynamic>> leaseArray = [];
         leaseData.asMap().forEach((index, laData) {
-          if (body['data']['propertyDetails'].isNotEmpty && laData['id'] == body['data']['propertyDetails'][0]['lease_type_id']) {
+          if (laData['id'] == propertyDetails['lease_type_id']) {
             setState(() {
               propertyLeaseTypeSelectedIndex = index;
             });
-          }else{
-            propertyLeaseTypeSelectedIndex =  laData['id'];
-
           }
-
-
           leaseArray.add({
             'index': index,
             'id': laData['id'],
@@ -178,18 +164,15 @@ class _PostStep2PageState extends State<PostStep2Page> {
           });
         });
 
+        // Process landTypes
         final List<dynamic> landTypesData = body['data']['landTypes'];
         List<Map<String, dynamic>> landTypesArray = [];
         landTypesData.asMap().forEach((index, laData) {
-          if (body['data']['propertyDetails'].isNotEmpty && laData['id'] == body['data']['propertyDetails'][0]['land_type_id']) {
+          if (laData['id'] == propertyDetails['land_type_id']) {
             setState(() {
               landTypeSelectedIndex = index;
             });
-          }else{
-            landTypeSelectedIndex = laData['id'];
-
           }
-
           landTypesArray.add({
             'index': index,
             'id': laData['id'],
@@ -197,19 +180,15 @@ class _PostStep2PageState extends State<PostStep2Page> {
           });
         });
 
-        final List<dynamic> landMeasurementsData =
-            body['data']['landMeasurements'];
+        // Process landMeasurements
+        final List<dynamic> landMeasurementsData = body['data']['landMeasurements'];
         List<Map<String, dynamic>> landMeasurementsArray = [];
         landMeasurementsData.asMap().forEach((index, laData) {
-          if (body['data']['propertyDetails'].isNotEmpty && laData['id'] == body['data']['propertyDetails'][0]['land_measurement_id']) {
+          if (laData['id'] == propertyDetails['land_measurement _id']) {
             setState(() {
               landTypeSelectedIndex = index;
             });
-          }else{
-            landTypeSelectedIndex = laData['id'];
-
           }
-
           landMeasurementsArray.add({
             'index': index,
             'id': laData['id'],
@@ -217,6 +196,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
           });
         });
 
+        // Update state
         setState(() {
           _propertTypesList = props;
           _propertConditionsList = pcon;
@@ -227,60 +207,28 @@ class _PostStep2PageState extends State<PostStep2Page> {
           _initDataFetched = true;
           propertyDetails = body['data']['propertyDetails'];
 
-
-          if (body['data']['propertyDetails'].isNotEmpty) {
-            _descriptionController.text =
-                body['data']['propertyDetails']['property_description'] ?? "";
-            _addressController.text = body['data']['propertyDetails']['address'] ?? "";
-            _amountController.text =
-            body['data']['propertyDetails']['amount'] != null
-                ? body['data']['propertyDetails']['amount'].toString()
-                : "";
-            _sqmController.text =
-            body['data']['propertyDetails']['measurements'] != null
-                ? body['data']['propertyDetails']['measurements'].toString()
-                : "";
-            _parkingSpacesController.text =
-            body['data']['propertyDetails']['parking_spaces'] != null
-                ? body['data']['propertyDetails']['parking_spaces'].toString()
-                : "";
-            _propertyType =
-                body['data']['propertyDetails']['type_id']?.toString() ?? "";
-            _propertyCondition =
-                body['data']['propertyDetails']['condition_id']?.toString() ?? "";
-            _propertyFurnished =
-                body['data']['propertyDetails']['furnish_id']?.toString() ?? "";
-            _leaseType =
-                body['data']['propertyDetails']['lease_type_id']?.toString() ?? "";
-            _bedrooms = body['data']['propertyDetails']['bedrooms'] != null
-                ? body['data']['propertyDetails']['bedrooms'].toString()
-                : "";
-            _parkingSpacesController.text =
-            body['data']['propertyDetails']['parking_spaces'] != null
-                ? body['data']['propertyDetails']['parking_spaces'].toString()
-                : "";
-          } else {
-            // Handle the case where 'propertyDetails' is empty
-            // Optionally, you can set default values or handle as per your logic.
-            _descriptionController.text = "";
-            _addressController.text = "";
-            _amountController.text = "";
-            _sqmController.text = "";
-            _parkingSpacesController.text = "";
-            _propertyType = "";
-            _propertyCondition = "";
-            _propertyFurnished = "";
-            _leaseType = "";
-            _bedrooms = "";
-            _parkingSpacesController.text = "";
-          }
+          _descriptionController.text = propertyDetails['property_description'] ?? "";
+          _addressController.text = propertyDetails['address'] ?? "";
+          _amountController.text = propertyDetails['amount']?.toString() ?? "";
+          _sqmController.text = propertyDetails['measurements']?.toString() ?? "";
+          _parkingSpacesController.text = propertyDetails['parking_spaces']?.toString() ?? "";
+          _propertyType = propertyDetails['type_id']?.toString() ?? "";
+          _propertyCondition = propertyDetails['condition_id']?.toString() ?? "";
+          _propertyFurnished = propertyDetails['furnish_id']?.toString() ?? "";
+          _leaseType = propertyDetails['lease_type_id']?.toString() ?? "";
+          _bedrooms = propertyDetails['bedrooms']?.toString() ?? "";
         });
-
-
-        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to fetch data: ${body['message']}')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch data: ${res.statusCode}')),
+      );
     }
   }
-
   _submitProperty(context) async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -301,7 +249,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
     var user = json.decode(localStorage.getString('user') ?? '{}');
 
     String cleanedAmount =
-        _amountController.text.replaceAll(RegExp(r'[^\d]'), '');
+    _amountController.text.replaceAll(RegExp(r'[^\d]'), '');
 
     var data = {
       'step': '2',
@@ -372,18 +320,18 @@ class _PostStep2PageState extends State<PostStep2Page> {
                   _buildTitle(context),
                   const SizedBox(
                       height:
-                          20), // Add some space between the title and the form
+                      20), // Add some space between the title and the form
                   _initDataFetched
                       ? _buildPostForm(context)
                       : const Center(
-                          child: Text(
-                            "Loading...Please Wait",
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                    child: Text(
+                      "Loading...Please Wait",
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -452,13 +400,13 @@ class _PostStep2PageState extends State<PostStep2Page> {
                     filled: true,
                     fillColor: Theme.of(context).brightness == Brightness.dark
                         ? Colors
-                            .grey[850] // Dropdown background color in dark mode
+                        .grey[850] // Dropdown background color in dark mode
                         : Colors
-                            .white, // Dropdown background color in light mode
+                        .white, // Dropdown background color in light mode
                   ),
                 ),
                 selectedItem: propertyTypeSelectedIndex != null &&
-                        propertyTypeSelectedIndex != ""
+                    propertyTypeSelectedIndex != ""
                     ? _propertTypesList[propertyTypeSelectedIndex]
                     : null,
                 dropdownBuilder: (context, selectedItem) {
@@ -476,7 +424,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                   );
                 },
                 itemAsString: (Map<String, dynamic> subregion) =>
-                    subregion["value"],
+                subregion["value"],
                 onChanged: (Map<String, dynamic>? onchangeData) {
                   setState(() {
                     _propertyType = onchangeData?["id"].toString() ?? '';
@@ -489,7 +437,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                   return null;
                 },
                 compareFn: (item, selectedItem) =>
-                    item["id"] == selectedItem["id"],
+                item["id"] == selectedItem["id"],
               ),
             ),
             Visibility(
@@ -520,13 +468,13 @@ class _PostStep2PageState extends State<PostStep2Page> {
                       filled: true,
                       fillColor: Theme.of(context).brightness == Brightness.dark
                           ? Colors.grey[
-                              850] // Dropdown background color in dark mode
+                      850] // Dropdown background color in dark mode
                           : Colors
-                              .white, // Dropdown background color in light mode
+                          .white, // Dropdown background color in light mode
                     ),
                   ),
                   selectedItem: landTypeSelectedIndex != null &&
-                          landTypeSelectedIndex != ""
+                      landTypeSelectedIndex != ""
                       ? _landTypesList[landTypeSelectedIndex]
                       : null,
                   dropdownBuilder: (context, selectedItem) {
@@ -544,7 +492,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                     );
                   },
                   itemAsString: (Map<String, dynamic> subregion) =>
-                      subregion["value"],
+                  subregion["value"],
                   onChanged: (Map<String, dynamic>? onchangeData) {
                     setState(() {
                       _landType = onchangeData?["id"].toString() ?? '';
@@ -557,7 +505,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                     return null;
                   },
                   compareFn: (item, selectedItem) =>
-                      item["id"] == selectedItem["id"],
+                  item["id"] == selectedItem["id"],
                 ),
               ),
             ),
@@ -589,15 +537,15 @@ class _PostStep2PageState extends State<PostStep2Page> {
                       filled: true,
                       fillColor: Theme.of(context).brightness == Brightness.dark
                           ? Colors.grey[
-                              850] // Dropdown background color in dark mode
+                      850] // Dropdown background color in dark mode
                           : Colors
-                              .white, // Dropdown background color in light mode
+                          .white, // Dropdown background color in light mode
                     ),
                   ),
                   selectedItem:
-                      landMeasurementIndex != null && landMeasurementIndex != ""
-                          ? _landMeasurementsList[landMeasurementIndex]
-                          : null,
+                  landMeasurementIndex != null && landMeasurementIndex != ""
+                      ? _landMeasurementsList[landMeasurementIndex]
+                      : null,
                   dropdownBuilder: (context, selectedItem) {
                     // Safeguard against null selectedItem
                     final displayText = selectedItem != null
@@ -613,7 +561,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                     );
                   },
                   itemAsString: (Map<String, dynamic> subregion) =>
-                      subregion["value"],
+                  subregion["value"],
                   onChanged: (Map<String, dynamic>? onchangeData) {
                     setState(() {
                       _landMeasurement = onchangeData?["id"].toString() ?? '';
@@ -626,7 +574,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                   //   return null;
                   // },
                   compareFn: (item, selectedItem) =>
-                      item["id"] == selectedItem["id"],
+                  item["id"] == selectedItem["id"],
                 ),
               ),
             ),
@@ -709,7 +657,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                     ),
                   ),
                   selectedItem: propertyConditionSelectedIndex != null &&
-                          propertyConditionSelectedIndex != ""
+                      propertyConditionSelectedIndex != ""
                       ? _propertConditionsList[propertyConditionSelectedIndex]
                       : null,
                   dropdownBuilder: (context, selectedItem) {
@@ -726,7 +674,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                     );
                   },
                   itemAsString: (Map<String, dynamic> subregion) =>
-                      subregion["value"],
+                  subregion["value"],
                   onChanged: (Map<String, dynamic>? onchangeData) {
                     setState(() {
                       _propertyCondition = onchangeData?["id"].toString() ?? '';
@@ -739,7 +687,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                     return null;
                   },
                   compareFn: (item, selectedItem) =>
-                      item["id"] == selectedItem["id"],
+                  item["id"] == selectedItem["id"],
                 ),
               ),
             ),
@@ -775,7 +723,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                     ),
                   ),
                   selectedItem: propertyFurnishedSelectedIndex != null &&
-                          propertyFurnishedSelectedIndex != ""
+                      propertyFurnishedSelectedIndex != ""
                       ? _furnishedList[propertyFurnishedSelectedIndex]
                       : null,
                   dropdownBuilder: (context, selectedItem) {
@@ -792,7 +740,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                     );
                   },
                   itemAsString: (Map<String, dynamic> furnishedItem) =>
-                      furnishedItem["value"],
+                  furnishedItem["value"],
                   onChanged: (Map<String, dynamic>? onchangeData) {
                     setState(() {
                       _propertyFurnished = onchangeData?["id"].toString() ?? '';
@@ -805,7 +753,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                     return null;
                   },
                   compareFn: (item, selectedItem) =>
-                      item["id"] == selectedItem["id"],
+                  item["id"] == selectedItem["id"],
                 ),
               ),
             ),
@@ -839,7 +787,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                   ),
                 ),
                 selectedItem: propertyLeaseTypeSelectedIndex != null &&
-                        propertyLeaseTypeSelectedIndex != ""
+                    propertyLeaseTypeSelectedIndex != ""
                     ? _leaseTypesList[propertyLeaseTypeSelectedIndex]
                     : null,
                 dropdownBuilder: (context, selectedItem) {
@@ -869,7 +817,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                   return null;
                 },
                 compareFn: (item, selectedItem) =>
-                    item["id"] == selectedItem["id"],
+                item["id"] == selectedItem["id"],
               ),
             ),
             if (_leaseType == '2')
@@ -942,7 +890,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                                       // If offplan is 'No', reset auction selection
                                       if (_selectedOffPlan == '0') {
                                         _selectedAuction =
-                                            '0'; // Set auction to 'No'
+                                        '0'; // Set auction to 'No'
                                       }
                                     });
                                   },
@@ -960,7 +908,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                                       // If offplan is 'Yes', set auction to 'No'
                                       if (_selectedOffPlan == '1') {
                                         _selectedAuction =
-                                            '0'; // Set auction to 'No'
+                                        '0'; // Set auction to 'No'
                                       }
                                     });
                                   },
@@ -997,9 +945,9 @@ class _PostStep2PageState extends State<PostStep2Page> {
                             color: isDisabled
                                 ? Colors.grey
                                 : Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white // Text color in dark mode
-                                    : Colors.black, // Text color in light mode
+                                Brightness.dark
+                                ? Colors.white // Text color in dark mode
+                                : Colors.black, // Text color in light mode
                           ),
                         ),
                         enabled: !isDisabled,
@@ -1261,41 +1209,41 @@ class _PostStep2PageState extends State<PostStep2Page> {
                             hintText: 'Enter Parking Spaces',
                             labelStyle: TextStyle(
                               color: Theme.of(context).brightness ==
-                                      Brightness.dark
+                                  Brightness.dark
                                   ? Colors.white70 // Label color in dark mode
                                   : Colors.black54, // Label color in light mode
                             ),
                             hintStyle: TextStyle(
                               color: Theme.of(context).brightness ==
-                                      Brightness.dark
+                                  Brightness.dark
                                   ? Colors.white54 // Hint color in dark mode
                                   : Colors.black38, // Hint color in light mode
                             ),
                             filled: true, // Ensure filled is set to true
                             fillColor: Theme.of(context).brightness ==
-                                    Brightness.dark
+                                Brightness.dark
                                 ? Colors
-                                    .grey[800] // Background color in dark mode
+                                .grey[800] // Background color in dark mode
                                 : Colors
-                                    .white, // Background color in light mode
+                                .white, // Background color in light mode
                             border: OutlineInputBorder(
                               borderSide: BorderSide(
                                 color: Theme.of(context).brightness ==
-                                        Brightness.dark
+                                    Brightness.dark
                                     ? Colors
-                                        .white38 // Border color in dark mode
+                                    .white38 // Border color in dark mode
                                     : Colors
-                                        .black54, // Border color in light mode
+                                    .black54, // Border color in light mode
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                 color: Theme.of(context).brightness ==
-                                        Brightness.dark
+                                    Brightness.dark
                                     ? Colors
-                                        .white // Focused border color in dark mode
+                                    .white // Focused border color in dark mode
                                     : Colors
-                                        .blue, // Focused border color in light mode
+                                    .blue, // Focused border color in light mode
                               ),
                             ),
                           ),
@@ -1324,41 +1272,41 @@ class _PostStep2PageState extends State<PostStep2Page> {
                             hintText: 'Specify the Property Measurements.',
                             labelStyle: TextStyle(
                               color: Theme.of(context).brightness ==
-                                      Brightness.dark
+                                  Brightness.dark
                                   ? Colors.white70 // Label color in dark mode
                                   : Colors.black54, // Label color in light mode
                             ),
                             hintStyle: TextStyle(
                               color: Theme.of(context).brightness ==
-                                      Brightness.dark
+                                  Brightness.dark
                                   ? Colors.white54 // Hint color in dark mode
                                   : Colors.black38, // Hint color in light mode
                             ),
                             filled: true, // Ensure filled is set to true
                             fillColor: Theme.of(context).brightness ==
-                                    Brightness.dark
+                                Brightness.dark
                                 ? Colors
-                                    .grey[800] // Background color in dark mode
+                                .grey[800] // Background color in dark mode
                                 : Colors
-                                    .white, // Background color in light mode
+                                .white, // Background color in light mode
                             border: OutlineInputBorder(
                               borderSide: BorderSide(
                                 color: Theme.of(context).brightness ==
-                                        Brightness.dark
+                                    Brightness.dark
                                     ? Colors
-                                        .white38 // Border color in dark mode
+                                    .white38 // Border color in dark mode
                                     : Colors
-                                        .black54, // Border color in light mode
+                                    .black54, // Border color in light mode
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                 color: Theme.of(context).brightness ==
-                                        Brightness.dark
+                                    Brightness.dark
                                     ? Colors
-                                        .white // Focused border color in dark mode
+                                    .white // Focused border color in dark mode
                                     : Colors
-                                        .blue, // Focused border color in light mode
+                                    .blue, // Focused border color in light mode
                               ),
                             ),
                           ),
@@ -1393,7 +1341,7 @@ class _PostStep2PageState extends State<PostStep2Page> {
                         fontSize: 18, // Increased font size
                         color: Colors.white,
                         fontWeight:
-                            FontWeight.bold, // Optional: makes the text bold
+                        FontWeight.bold, // Optional: makes the text bold
                       ),
                     ),
                   ),

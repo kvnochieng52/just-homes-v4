@@ -9,8 +9,10 @@ class NextButtonWidget extends StatelessWidget {
   final String userTown;
   final String userRegion;
   final TextEditingController titleController;
-  final String propertyID;
   final PropertySubmissionService _propertySubmissionService;
+  final double latitude;
+  final double longitude;
+  final int userId;
 
   const NextButtonWidget({
     super.key,
@@ -19,7 +21,9 @@ class NextButtonWidget extends StatelessWidget {
     required this.userTown,
     required this.userRegion,
     required this.titleController,
-    required this.propertyID,
+    required this.latitude,
+    required this.longitude,
+    required this.userId,
     required PropertySubmissionService propertySubmissionService,
   }) : _propertySubmissionService = propertySubmissionService;
 
@@ -30,15 +34,26 @@ class NextButtonWidget extends StatelessWidget {
       child: SizedBox(
         width: double.infinity, // Full width of the parent
         child: ElevatedButton(
-          onPressed: () => _propertySubmissionService.submitProperty(
-            context: context,
-            formKey: formKey,
-            images: images,
-            userTown: userTown,
-            userRegion: userRegion,
-            titleController: titleController,
-            propertyID: propertyID,
-          ),
+          onPressed: () {
+            formKey.currentState!.save();
+
+            _propertySubmissionService.submitProperty(
+
+
+              step: 1,
+              propertyTitle: titleController.text,
+              town: userRegion,
+              subRegion: userTown,
+              latitude: latitude,
+              longitude: longitude,
+              country: "Kenya",
+              countryCode: "KE",
+              address: userTown,
+              userId: userId,
+              images: images.map((e) => e.path).toList(),
+              context: context
+            );
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.purple, // Purple background color
             foregroundColor: Colors.white, // White font color

@@ -32,8 +32,11 @@ class _PostPageState extends State<PostPage> {
 
   var _userTown = '';
   var _userRegion = '';
+  var _lat = 0.0;
+  var _lon = 0.0;
+  var _userId = 0;
 
-  var _propertyID = 0;
+  var _propertyID = 693;
 
   final _titleController = TextEditingController();
 
@@ -88,59 +91,73 @@ class _PostPageState extends State<PostPage> {
     }
   }
 
-  _getSubRegions(townID) async {
-    setState(() {
-      _subRegionsList = [];
-      _isSubRegionEnabled = false;
-      _isLoadingSubRegions = true;
-    });
-
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    var user = json.decode(localStorage.getString('user') ?? '{}');
-
-    var data = {
-      'townID': townID,
-      'user_id': user['id'],
-      'propertyID': _propertyID
-    };
-
-    var res =
-    await CallApi().postData(data, 'property/get-sub-regions-and-post');
-
-    if (res.statusCode == 200) {
-      var body = json.decode(res.body);
-
-      print(body);
-
-      if (body['success']) {
-        final List<dynamic> subRegionsData = body['data']['subRegionsList'];
-
-        List<Map<String, dynamic>> subRs = [];
-        for (var sregionData in subRegionsData) {
-          subRs.add({
-            'id': sregionData['id'],
-            'value': sregionData['value'],
-          });
-        }
-        setState(() {
-          _subRegionsList = subRs;
-          _isSubRegionEnabled = true;
-          _propertyID = body['data']['propertyID'];
-          _propertyDetails = body['data']['propertyDetails'];
-          _propertyFeaturesList = body['data']['propertyFeaturesList'];
-        });
-      }
-    }
-
-    setState(() {
-      _isLoadingSubRegions = false;
-    });
-  }
+  // _getSubRegions(townID) async {
+  //   setState(() {
+  //     _subRegionsList = [];
+  //     _isSubRegionEnabled = false;
+  //     _isLoadingSubRegions = true;
+  //   });
+  //
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   var user = json.decode(localStorage.getString('user') ?? '{}');
+  //
+  //   var data = {
+  //     'townID': townID,
+  //     'user_id': user['id'],
+  //     'propertyID': _propertyID
+  //   };
+  //
+  //
+  //   print("PORST ------->"  + data.toString());
+  //
+  //
+  //   var res =
+  //   await CallApi().postData(data, 'property/get-sub-regions-and-post');
+  //
+  //
+  //   var body = json.decode(res.body);
+  //   print("SUBREGIONS------->" + body.toString());
+  //
+  //
+  //   // if (res.statusCode == 200) {
+  //   //   var body = json.decode(res.body);
+  //     if (body['success']) {
+  //       final List<dynamic> subRegionsData = body['data']['subRegionsList'];
+  //
+  //
+  //       print("SUBREGIONS---lll---->" + subRegionsData.toString());
+  //
+  //
+  //       List<Map<String, dynamic>> subRs = [];
+  //       for (var sregionData in subRegionsData) {
+  //         subRs.add({
+  //           'id': sregionData['id'],
+  //           'value': sregionData['value'],
+  //         });
+  //       }
+  //
+  //
+  //       print("SUBREGIONS----subRs--->" + subRs.toString());
+  //
+  //       setState(() {
+  //         _subRegionsList = subRs;
+  //         _isSubRegionEnabled = false;
+  //         _propertyID = body['data']['propertyID'];
+  //         _propertyDetails = body['data']['propertyDetails'];
+  //         _propertyFeaturesList = body['data']['propertyFeaturesList'];
+  //       });
+  //     }
+  //   // }
+  //
+  //   setState(() {
+  //     _isLoadingSubRegions = false;
+  //   });
+  // }
 
   Future<void> pickAssets(BuildContext context) async {
     try {
       final PermissionState result =
-      await PhotoManager.requestPermissionExtend();
+          await PhotoManager.requestPermissionExtend();
       if (result.isAuth) {
         final List<AssetEntity>? result = await AssetPicker.pickAssets(
           context,
@@ -259,8 +276,6 @@ class _PostPageState extends State<PostPage> {
             onAddImage: () => pickAssets(context),
             onUploadImage: uploadImages, // Only upload on form submission
           ),
-
-
           TitleInput(
             titleController: _titleController,
             validator: (value) {
@@ -272,68 +287,59 @@ class _PostPageState extends State<PostPage> {
           ),
           SizedBox(height: 10),
           LocationFormField(
-            apiKey: 'AIzaSyDdybb1niN-HUAAwsJeVBwTzXECC9UwdTs', // Replace with your API Key
+            apiKey: 'AIzaSyCmTdU82ckfAaM_Hs2Jn8a9GA_iG-SaGYw',
             hintText: "Enter your location",
             onSaved: (value) {
               if (value != null) {
-                print("Selected county: $value");
-
-                // Manually format the string to valid JSON
-                String formattedJson = value
-                    .replaceAll("{", "{\"")
-                    .replaceAll("}", "\"}")
-                    .replaceAll(": ", "\":\"")
-                    .replaceAll(", ", "\", \"");
-
-                // Decode into a Map
-                Map<String, dynamic> dataMap = jsonDecode(formattedJson);
-
-                _userTown = dataMap['county'].toString();
-                _userRegion = dataMap['locality'].toString();
+                print("Selected county: ${value['county']}");
+                print("Selected locality: ${value['locality']}");
+                print("Selected LAT: ${value['latitude']}");
+                print("Selected LON: ${value['longitude']}");
+                _userTown = value['locality'] ?? "Nairobi";
+                _userRegion = value['county'];
+                _lat = value['latitude'];
+                _lon = value['longitude'];
               }
             },
           ),
-
-
-
-          // TownInput(
-          //   townsList: _townsList,
+          // NextButtonWidget(
+          //   images: _images,
           //   userTown: _userTown,
-          //   isLoadingSubRegions: _isLoadingSubRegions,
-          //   isDarkMode: Theme.of(context).brightness == Brightness.dark,
-          //   onTownChanged: (selectedTown) {
-          //     setState(() {
-          //       _userTown = selectedTown?["id"].toString() ?? '';
-          //       _showRegionsInput = true;
-          //     });
-          //   },
-          //   fetchSubRegions: () => _getSubRegions(_userTown),
-          //   initDataFetched: _initDataFetched,
-          // ),
-          // SubRegionInput(
-          //   isSubRegionEnabled: _isSubRegionEnabled,
-          //   subRegionsList: _subRegionsList,
-          //   onChanged: (selectedSubRegion) {
-          //     setState(() {
-          //       _userRegion = selectedSubRegion?["id"].toString() ?? '';
-          //     });
-          //   },
-          //   validator: (value) {
-          //     if (value == null) {
-          //       return 'Please select sub-region';
-          //     }
-          //     return null;
-          //   },
-          //   selectedSubRegion: _userRegion,
-          // ),
-          NextButtonWidget(
-            formKey: _formKey,
-            images: _images,
-            userTown: _userTown,
-            userRegion: _userRegion,
-            titleController: _titleController,
-            propertyID: _propertyID.toString(),
-            propertySubmissionService: _propertySubmissionService,
+          //   userRegion: _userRegion,
+          //   titleController: _titleController,
+          //   latitude: _lat,
+          //   longitude: _lon,
+          //   userId: _userId,
+          //   propertySubmissionService: _propertySubmissionService,
+          //   formKey: _formKey,
+          // )
+          SizedBox(height: 20),
+
+          ElevatedButton(
+            onPressed: () {
+              _formKey.currentState!.save();
+
+              _propertySubmissionService.submitProperty(
+                  step: 1,
+                  propertyTitle: _titleController.text,
+                  town: _userRegion,
+                  subRegion: _userTown,
+                  latitude: _lat,
+                  longitude: _lon,
+                  country: "Kenya",
+                  countryCode: "KE",
+                  address: _userTown,
+                  userId: _userId,
+                  images: _images.map((e) => e.path).toList(),
+                  context: context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple, // Purple background color
+              foregroundColor: Colors.white, // White font color
+              minimumSize:
+                  const Size(double.infinity, 50), // Set a minimum height
+            ),
+            child: const Text("Next"),
           )
         ],
       ),
