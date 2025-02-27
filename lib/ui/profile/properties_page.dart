@@ -329,6 +329,8 @@ class _PropertiesPageState extends State<PropertiesPage> {
           body: _initDataFetched
               ? _userProperties.isNotEmpty
                   ? ListView.builder(
+                      reverse: true,
+                      shrinkWrap: true,
                       itemCount: _userProperties.length,
                       itemBuilder: (context, index) {
                         return _buildPropertyItem(_userProperties[index]);

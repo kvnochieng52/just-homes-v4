@@ -21,7 +21,7 @@ class PropertySubmissionService {
   }) async {
     print("Submitting property...");
 
-    clearSavedImages(); // Clear saved images before submitting
+    await clearSavedImages();
 
     final String url = "https://justhomes.co.ke/api/property/post";
     String imagesString = images.join(',');

@@ -3,6 +3,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_apartment_live/api/api.dart';
+import 'package:just_apartment_live/ui/property/post_property/widgets/GMaps.dart';
 import 'package:just_apartment_live/ui/property/price_input_formatter.dart';
 import 'package:just_apartment_live/ui/property/search_results_page.dart';
 import 'package:just_apartment_live/widgets/header_main_widget.dart';
@@ -121,56 +122,75 @@ class _SearchPageState extends State<SearchPage> {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                  child: TextFormField(
-                    controller: _locationController,
-                    decoration: InputDecoration(
-                      labelText: 'Location',
-                      hintText: 'Enter The Location',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide: BorderSide(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface, // Border color
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide: BorderSide(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface, // Enabled border color
-                          width: 1.0,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide: const BorderSide(
-                          color: Colors.blue, // Focused border color
-                          width: 1.5,
-                        ),
-                      ),
-                      filled: true,
-                      fillColor: Theme.of(context)
-                          .scaffoldBackgroundColor, // Fill color
-                      labelStyle: TextStyle(
-                        color: Theme.of(context)
-                            .textTheme
-                            .bodyMedium!
-                            .color, // Label color
-                      ),
-                      hintStyle: TextStyle(
-                        color: Theme.of(context).hintColor, // Hint text color
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return 'Enter property Address';
-                      }
-                      return null;
-                    },
+                  // child: TextFormField(
+                  //   controller: _locationController,
+                  //   decoration: InputDecoration(
+                  //     labelText: 'Location',
+                  //     hintText: 'Enter The Location',
+                  //     border: OutlineInputBorder(
+                  //       borderRadius: BorderRadius.circular(5.0),
+                  //       borderSide: BorderSide(
+                  //         color: Theme.of(context)
+                  //             .colorScheme
+                  //             .onSurface, // Border color
+                  //       ),
+                  //     ),
+                  //     enabledBorder: OutlineInputBorder(
+                  //       borderRadius: BorderRadius.circular(5.0),
+                  //       borderSide: BorderSide(
+                  //         color: Theme.of(context)
+                  //             .colorScheme
+                  //             .onSurface, // Enabled border color
+                  //         width: 1.0,
+                  //       ),
+                  //     ),
+                  //     focusedBorder: OutlineInputBorder(
+                  //       borderRadius: BorderRadius.circular(5.0),
+                  //       borderSide: const BorderSide(
+                  //         color: Colors.blue, // Focused border color
+                  //         width: 1.5,
+                  //       ),
+                  //     ),
+                  //     filled: true,
+                  //     fillColor: Theme.of(context)
+                  //         .scaffoldBackgroundColor, // Fill color
+                  //     labelStyle: TextStyle(
+                  //       color: Theme.of(context)
+                  //           .textTheme
+                  //           .bodyMedium!
+                  //           .color, // Label color
+                  //     ),
+                  //     hintStyle: TextStyle(
+                  //       color: Theme.of(context).hintColor, // Hint text color
+                  //     ),
+                  //   ),
+                  //   validator: (value) {
+                  //     if (value!.isEmpty) {
+                  //       return 'Enter property Address';
+                  //     }
+                  //     return null;
+                  //   },
+                  //   onSaved: (value) {
+                  //     _locationController.text = value!;
+                  //   },
+                  // ),
+                  child: LocationFormField(
+                    apiKey: 'AIzaSyCmTdU82ckfAaM_Hs2Jn8a9GA_iG-SaGYw',
+                    hintText: "Enter your location",
                     onSaved: (value) {
-                      _locationController.text = value!;
+                      if (value != null) {
+                        print("Selected county: ${value['county']}");
+                        print("Selected locality: ${value['locality']}");
+                        print("Selected LAT: ${value['latitude']}");
+                        print("Selected LON: ${value['longitude']}");
+
+                        //     _locationController.text = value!;
+
+                        _locationController.text = value['locality'] ?? "Nairobi";
+                        // _userRegion = value['county'] ?? "Nairobi";
+                        // _lat = value['latitude'];
+                        // _lon = value['longitude'];
+                      }
                     },
                   ),
                 ),

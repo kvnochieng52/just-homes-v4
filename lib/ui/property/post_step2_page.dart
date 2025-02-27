@@ -382,6 +382,13 @@ class _PostStep2PageState extends State<PostStep2Page> {
                 right: 5,
               ),
               child: DropdownSearch<Map<String, dynamic>>(
+                popupProps: PopupProps.menu(
+                  fit: FlexFit.loose, // Avoid full screen height
+                  constraints: BoxConstraints(
+                    maxHeight: 200, // Limit dropdown height
+                  ),
+                  showSearchBox: false, // Optional: Hide search box
+                ),
                 items: _propertTypesList,
                 dropdownDecoratorProps: DropDownDecoratorProps(
                   dropdownSearchDecoration: InputDecoration(
@@ -451,6 +458,13 @@ class _PostStep2PageState extends State<PostStep2Page> {
                 ),
                 child: DropdownSearch<Map<String, dynamic>>(
                   items: _landTypesList,
+                  popupProps: PopupProps.menu(
+                    fit: FlexFit.loose, // Avoid full screen height
+                    constraints: BoxConstraints(
+                      maxHeight: 200, // Limit dropdown height
+                    ),
+                    showSearchBox: false, // Optional: Hide search box
+                  ),
                   dropdownDecoratorProps: DropDownDecoratorProps(
                     dropdownSearchDecoration: InputDecoration(
                       labelText: "Land Type",
@@ -520,6 +534,13 @@ class _PostStep2PageState extends State<PostStep2Page> {
                 ),
                 child: DropdownSearch<Map<String, dynamic>>(
                   items: _landMeasurementsList,
+                  popupProps: PopupProps.menu(
+                    fit: FlexFit.loose, // Avoid full screen height
+                    constraints: BoxConstraints(
+                      maxHeight: 200, // Limit dropdown height
+                    ),
+                    showSearchBox: false, // Optional: Hide search box
+                  ),
                   dropdownDecoratorProps: DropDownDecoratorProps(
                     dropdownSearchDecoration: InputDecoration(
                       labelText: "Land Measurement in Acres(optional)",
@@ -636,6 +657,13 @@ class _PostStep2PageState extends State<PostStep2Page> {
                 ),
                 child: DropdownSearch<Map<String, dynamic>>(
                   items: _propertConditionsList,
+                  popupProps: PopupProps.menu(
+                    fit: FlexFit.loose, // Avoid full screen height
+                    constraints: BoxConstraints(
+                      maxHeight: 200, // Limit dropdown height
+                    ),
+                    showSearchBox: false, // Optional: Hide search box
+                  ),
                   dropdownDecoratorProps: DropDownDecoratorProps(
                     dropdownSearchDecoration: InputDecoration(
                       labelText: "Property Condition",
@@ -702,6 +730,13 @@ class _PostStep2PageState extends State<PostStep2Page> {
                 ),
                 child: DropdownSearch<Map<String, dynamic>>(
                   items: _furnishedList,
+                  popupProps: PopupProps.menu(
+                    fit: FlexFit.loose, // Avoid full screen height
+                    constraints: BoxConstraints(
+                      maxHeight: 200, // Limit dropdown height
+                    ),
+                    showSearchBox: false, // Optional: Hide search box
+                  ),
                   dropdownDecoratorProps: DropDownDecoratorProps(
                     dropdownSearchDecoration: InputDecoration(
                       labelText: "Furnished",
@@ -766,6 +801,13 @@ class _PostStep2PageState extends State<PostStep2Page> {
               ),
               child: DropdownSearch<Map<String, dynamic>>(
                 items: _leaseTypesList,
+                popupProps: PopupProps.menu(
+                  fit: FlexFit.loose, // Avoid full screen height
+                  constraints: BoxConstraints(
+                    maxHeight: 200, // Limit dropdown height
+                  ),
+                  showSearchBox: false, // Optional: Hide search box
+                ),
                 dropdownDecoratorProps: DropDownDecoratorProps(
                   dropdownSearchDecoration: InputDecoration(
                     labelText: "Listing Type",

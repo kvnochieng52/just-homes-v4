@@ -16,6 +16,7 @@ class TitleInput extends StatelessWidget {
       padding: const EdgeInsets.only(top: 15.0),
       child: TextFormField(
         controller: titleController,
+        maxLength: 15,
         decoration: InputDecoration(
           labelText: 'Title',
           hintText: 'Enter Property Title',

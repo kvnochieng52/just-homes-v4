@@ -67,6 +67,7 @@ class _LatestPropertiesWidgetState extends State<LatestPropertiesWidget>
 
     return ListView.builder(
       shrinkWrap: true,
+      reverse: false,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.only(top: 5.0, bottom: 15.0),
       itemCount: widget.latestProperties.length,

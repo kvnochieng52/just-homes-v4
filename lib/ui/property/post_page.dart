@@ -60,10 +60,13 @@ class _PostPageState extends State<PostPage> {
   @override
   void initState() {
     super.initState();
+
     _getInitData();
   }
 
   _getInitData() async {
+    await clearSavedImages();
+
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var user = json.decode(localStorage.getString('user') ?? '{}');
 
@@ -155,6 +158,22 @@ class _PostPageState extends State<PostPage> {
   //   });
   // }
 
+  Future<void> clearSavedImages() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      bool isRemoved = await prefs.remove('uploaded_images'); // Remove the stored image paths list
+      if (isRemoved) {
+        uploadedImagePaths.clear();
+        print('Saved image paths cleared.');
+      } else {
+        print('No saved image paths found.');
+      }
+    } catch (e) {
+      print('Error clearing saved image paths: $e');
+    }
+  }
+
+
   Future<void> pickAssets(BuildContext context) async {
     try {
       final PermissionState result =
@@ -170,6 +189,7 @@ class _PostPageState extends State<PostPage> {
         );
 
         if (result != null) {
+          await clearSavedImages();
           final List<File> newImages = [];
           for (var asset in result) {
             final File? file = await asset.file;
@@ -192,6 +212,8 @@ class _PostPageState extends State<PostPage> {
       }
     } catch (e) {
       print("Error picking assets: $e");
+
+      clearSavedImages();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('An error occurred while picking images.'),
@@ -337,7 +359,7 @@ class _PostPageState extends State<PostPage> {
           SizedBox(height: 20),
 
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               _formKey.currentState!.save();
               if(uploadedImagePaths.isEmpty){
                 _loadSavedImagePaths();
@@ -347,6 +369,11 @@ class _PostPageState extends State<PostPage> {
 
               print("MAPICHA $_images");
               print("MAPICHA $uploadedImagePaths");
+
+              SharedPreferences localStorage = await SharedPreferences.getInstance();
+              var user = json.decode(localStorage.getString('user') ?? '{}');
+              var userId = user['id'];
+              print("MAPICHA ----->>>> $userId");
 
               _propertySubmissionService.submitProperty(
                   step: 1,
@@ -358,7 +385,7 @@ class _PostPageState extends State<PostPage> {
                   country: "Kenya",
                   countryCode: "KE",
                   address: _userTown,
-                  userId: _userId,
+                  userId: userId,
                   images: uploadedImagePaths,
                   context: context);
             },
